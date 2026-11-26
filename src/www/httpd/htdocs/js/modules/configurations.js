@@ -25,17 +25,15 @@ APP.configurations = (function($) {
             success: function(response) {
                 loadingStatusElem.fadeOut(500);
 
+                // Generic: fill every element that has the matching data-key
                 $.each(response, function(key, state) {
-                    if (key == "HOSTNAME" || key == "TIMEZONE" || key == "TIMELAPSE_DT" || key == "TIMELAPSE_VDT" || key == "NTP_SERVER" || key == "HTTPD_PORT" || key == "RTSP_PORT" || key == "USERNAME")
-                        $('input[type="text"][data-key="' + key + '"]').prop('value', state);
-                    else if (key == "RTSP_ALT" || key == "RTSP_STREAM" || key == "RTSP_AUDIO" || key=="SWAP_SWAPPINESS")
-                        $('select[data-key="' + key + '"]').prop('value', state);
-                    else if (key == "PASSWORD" || key == "SSH_PASSWORD")
-                        $('input[type="password"][data-key="' + key + '"]').prop('value', state);
-                    else if (key == "CRONTAB")
-                        $('textarea#' + key).prop('value', state);
+                    var el = $('[data-key="' + key + '"]');
+                    if (el.length == 0)
+                        return;
+                    if (el.is('input[type="checkbox"]'))
+                        el.prop('checked', state === 'yes');
                     else
-                        $('input[type="checkbox"][data-key="' + key + '"]').prop('checked', state === 'yes');
+                        el.prop('value', state);
                 });
             },
             error: function(response) {
@@ -52,34 +50,25 @@ APP.configurations = (function($) {
 
         saveStatusElem.text("Saving...");
 
-        $('.configs-switch input[type="checkbox"]').each(function() {
-            configs[$(this).attr('data-key')] = $(this).prop('checked') ? 'yes' : 'no';
+        // Generic: send every element of the page that has a data-key
+        $('#container [data-key]').each(function() {
+            var key = $(this).attr('data-key');
+            if ($(this).is('input[type="checkbox"]'))
+                configs[key] = $(this).prop('checked') ? 'yes' : 'no';
+            else
+                configs[key] = $(this).prop('value');
         });
 
-        configs["HOSTNAME"] = $('input[type="text"][data-key="HOSTNAME"]').prop('value');
-
-        //        if(!validateHostname(configs["HOSTNAME"]))
-        //        {
-        //            saveStatusElem.text("Failed");
-        //            alert("Hostname not valid!");
-        //            return;
-        //        }
-
-        configs["TIMEZONE"] = $('input[type="text"][data-key="TIMEZONE"]').prop('value');
-        configs["TIMELAPSE_DT"] = $('input[type="text"][data-key="TIMELAPSE_DT"]').prop('value');
-        configs["TIMELAPSE_VDT"] = $('input[type="text"][data-key="TIMELAPSE_VDT"]').prop('value');
-        configs["NTP_SERVER"] = $('input[type="text"][data-key="NTP_SERVER"]').prop('value');
-        configs["HTTPD_PORT"] = $('input[type="text"][data-key="HTTPD_PORT"]').prop('value');
-        configs["RTSP_ALT"] = $('select[data-key="RTSP_ALT"]').prop('value');
-        configs["RTSP_STREAM"] = $('select[data-key="RTSP_STREAM"]').prop('value');
-        configs["RTSP_AUDIO"] = $('select[data-key="RTSP_AUDIO"]').prop('value');
-        configs["RTSP_PORT"] = $('input[type="text"][data-key="RTSP_PORT"]').prop('value');
-        configs["USERNAME"] = $('input[type="text"][data-key="USERNAME"]').prop('value');
-        configs["PASSWORD"] = $('input[type="password"][data-key="PASSWORD"]').prop('value');
-        configs["SSH_PASSWORD"] = $('input[type="password"][data-key="SSH_PASSWORD"]').prop('value');
-        configs["CRONTAB"] = $('textarea#CRONTAB').prop('value');
-        configs["SYSLOG_SERVER"] = $('input[type="text"][data-key="SYSLOG_SERVER"]').prop('value');
-        configs["SWAP_SWAPPINESS"] = $('select[data-key="SWAP_SWAPPINESS"]').prop('value');
+        if (configs["WD_PING_HOST"] && !/^[A-Za-z0-9.:_-]*$/.test(configs["WD_PING_HOST"])) {
+            saveStatusElem.text("Failed");
+            alert("Ping host not valid!");
+            return;
+        }
+        if (configs["WD_NET_REBOOT_MIN"] !== undefined && !/^[0-9]+$/.test(configs["WD_NET_REBOOT_MIN"])) {
+            saveStatusElem.text("Failed");
+            alert("Reboot delay must be a number of minutes (0 = never)!");
+            return;
+        }
 
         var configData = JSON.stringify(configs);
         var escapedConfigData = configData.replace(/\\/g, "\\")

@@ -500,7 +500,7 @@
                                 <span class="switch-text"></span>
                             </label>
                             <span class="switch-description">
-                                Let the Wi-Fi driver use power saving (default). Disable it if the camera has a weak signal: lower and steadier latency. Applied when Wi-Fi connects (reboot to apply). Not every Wi-Fi driver supports it.
+                                Let the Wi-Fi driver use power saving. Disabled by default: the camera stays reachable with lower and steadier latency. Applied when Wi-Fi connects (reboot to apply). Not every Wi-Fi driver supports it.
                             </span>
                         </td>
                     </tr>
@@ -587,6 +587,137 @@
             </div>
         </div>
 
+        <h4 class="no-margin">Watchdog &amp; Reachability</h4>
+        <hr class="tiny-margin"/>
+        <div class="row">
+            <div class="twelve columns configs-switch">
+                <table class="u-full-width padded-table config-table">
+                    <tbody>
+                    <tr class="row">
+                        <td>Watchdog</td>
+                        <td>
+                            <label class="switch small">
+                                <input type="checkbox" data-key="WATCHDOG"/>
+                                <span class="slider round"></span>
+                                <span class="switch-text"></span>
+                            </label>
+                            <span class="switch-description">
+                                Supervise the camera every 10 seconds: RTSP server, main camera process, Wi-Fi link. Recommended (default on). Runs also when RTSP is disabled.
+                            </span>
+                        </td>
+                    </tr>
+                    <tr class="row">
+                        <td>Restart crashed services</td>
+                        <td>
+                            <label class="switch small">
+                                <input type="checkbox" data-key="WD_SERVICES"/>
+                                <span class="slider round"></span>
+                                <span class="switch-text"></span>
+                            </label>
+                            <span class="switch-description">
+                                Restart the web interface, SSH, ONVIF discovery, mDNS and cron if one of them stops.
+                            </span>
+                        </td>
+                    </tr>
+                    <tr class="row">
+                        <td>Network check</td>
+                        <td>
+                            <label class="switch small">
+                                <input type="checkbox" data-key="WD_NET_CHECK"/>
+                                <span class="slider round"></span>
+                                <span class="switch-text"></span>
+                            </label>
+                            <span class="switch-description">
+                                Ping the router every 30 seconds. If it stops answering the network configuration is renewed (DHCP) and, if it is still unreachable, the camera reboots. Nothing happens if the router never answers to ping.
+                            </span>
+                        </td>
+                    </tr>
+                    <tr class="row">
+                        <td>Ping host</td>
+                        <td>
+                            <input class="u-full-width" type="text" placeholder="default gateway" data-key="WD_PING_HOST" id="WD_PING_HOST"/>
+                            <span class="switch-description">
+                                Host or IP to ping for the network check. Leave empty to use the default gateway (router).
+                            </span>
+                        </td>
+                    </tr>
+                    <tr class="row">
+                        <td>Reboot if unreachable for</td>
+                        <td>
+                            <input class="u-full-width" type="text" placeholder="15" data-key="WD_NET_REBOOT_MIN" id="WD_NET_REBOOT_MIN"/>
+                            <span class="switch-description">
+                                Minutes without network before the camera reboots (default 15, 0 = never). After repeated reboots the delay grows, so a router switched off for hours does not cause a reboot loop.
+                            </span>
+                        </td>
+                    </tr>
+                    <tr class="row">
+                        <td>Watchdog log</td>
+                        <td>
+                            <label class="switch small">
+                                <input type="checkbox" data-key="WD_LOG"/>
+                                <span class="slider round"></span>
+                                <span class="switch-text"></span>
+                            </label>
+                            <span class="switch-description">
+                                Keep a short log of the watchdog actions in RAM (no SD wear). Visible in Maintenance &gt; Logs.
+                            </span>
+                        </td>
+                    </tr>
+                    <tr class="row">
+                        <td>Scheduled reboot</td>
+                        <td>
+                            <div class="standard-select">
+                                <select data-key="REBOOT_SCHEDULE" id="REBOOT_SCHEDULE">
+                                    <option value="no">Never</option>
+                                    <option value="daily">Every day</option>
+                                    <option value="weekly">Every Sunday</option>
+                                </select>
+                            </div>
+                            <span class="switch-description">
+                                Reboot the camera regularly. Helps cameras that become slow or unreachable after days of uptime.
+                            </span>
+                        </td>
+                    </tr>
+                    <tr class="row">
+                        <td>Scheduled reboot time</td>
+                        <td>
+                            <div class="standard-select">
+                                <select data-key="REBOOT_HOUR" id="REBOOT_HOUR">
+                                    <option value="0">00:00</option>
+                                    <option value="1">01:00</option>
+                                    <option value="2">02:00</option>
+                                    <option value="3">03:00</option>
+                                    <option value="4">04:00</option>
+                                    <option value="5">05:00</option>
+                                    <option value="6">06:00</option>
+                                    <option value="7">07:00</option>
+                                    <option value="8">08:00</option>
+                                    <option value="9">09:00</option>
+                                    <option value="10">10:00</option>
+                                    <option value="11">11:00</option>
+                                    <option value="12">12:00</option>
+                                    <option value="13">13:00</option>
+                                    <option value="14">14:00</option>
+                                    <option value="15">15:00</option>
+                                    <option value="16">16:00</option>
+                                    <option value="17">17:00</option>
+                                    <option value="18">18:00</option>
+                                    <option value="19">19:00</option>
+                                    <option value="20">20:00</option>
+                                    <option value="21">21:00</option>
+                                    <option value="22">22:00</option>
+                                    <option value="23">23:00</option>
+                                </select>
+                            </div>
+                            <span class="switch-description">
+                                Hour of the scheduled reboot (camera time zone).
+                            </span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
         <h4 class="no-margin">Expert</h4>
         <hr class="tiny-margin"/>
         <div class="row">

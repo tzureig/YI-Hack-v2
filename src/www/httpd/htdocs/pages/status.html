@@ -80,8 +80,20 @@
                 <td id="memory"></td>
             </tr>
             <tr>
+                <td>Free/Total Swap</td>
+                <td id="swap"></td>
+            </tr>
+            <tr>
                 <td>Free SD Space</td>
                 <td id="free_sd"></td>
+            </tr>
+            <tr>
+                <td>SD Used/Size</td>
+                <td id="sd_size"></td>
+            </tr>
+            <tr id="tr_temperature" style="display: none;">
+                <td>Temperature</td>
+                <td id="temperature"></td>
             </tr>
             </tbody>
         </table>
@@ -91,6 +103,10 @@
 
         <table class="u-full-width padded-table">
             <tbody>
+            <tr>
+                <td>Connection</td>
+                <td id="link"></td>
+            </tr>
             <tr>
                 <td class="">Address</td>
                 <td id="local_ip"></td>
@@ -113,8 +129,24 @@
             </tr>
             <tr>
                 <td>WiFi Strength</td>
-                <td><img id="wlan_strength" src="img/wlan_no_signal.png"><span id="wlan_strength_percent">No signal</span></td>
+                <td><img id="wlan_strength" src="img/wlan_no_signal.png"><span id="wlan_strength_percent">No signal</span> <span id="wlan_dbm_text"></span></td>
             </tr>
+            </tbody>
+        </table>
+
+        <h5 class="tiny-margin strong">Services</h5>
+        <hr class="no-margin"/>
+
+        <table class="u-full-width padded-table">
+            <tbody>
+            <tr><td>RTSP server</td><td id="svc_rtsp" class="svc-state"></td></tr>
+            <tr><td>ONVIF</td><td id="svc_onvif" class="svc-state"></td></tr>
+            <tr><td>SSH</td><td id="svc_ssh" class="svc-state"></td></tr>
+            <tr><td>FTP</td><td id="svc_ftp" class="svc-state"></td></tr>
+            <tr><td>MQTT</td><td id="svc_mqtt" class="svc-state"></td></tr>
+            <tr><td>Watchdog</td><td id="svc_wd" class="svc-state"></td></tr>
+            <tr><td>Last watchdog reboot</td><td id="wd_last_reboot"></td></tr>
+            <tr><td>Last watchdog event</td><td id="wd_last_event"></td></tr>
             </tbody>
         </table>
     </div>

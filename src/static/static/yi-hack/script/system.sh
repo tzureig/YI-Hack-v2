@@ -344,16 +344,7 @@ fi
 
 if [[ $(get_config SSHD) == "yes" ]] ; then
     log "Starting sshd"
-    mkdir -p $YI_HACK_PREFIX/etc/dropbear
-    if [ ! -f $YI_HACK_PREFIX/etc/dropbear/dropbear_ecdsa_host_key ]; then
-        dropbearkey -t ecdsa -f /tmp/dropbear_ecdsa_host_key
-        mv /tmp/dropbear_ecdsa_host_key $YI_HACK_PREFIX/etc/dropbear/
-    fi
-    # Restore keys
-#    mkdir -p /etc/dropbear
-#    cp -f $SONOFF_HACK_PREFIX/etc/dropbear/* /etc/dropbear/
-    chmod 0600 $YI_HACK_PREFIX/etc/dropbear/*
-    dropbear -R -B -p 0.0.0.0:22
+    $START_STOP_SCRIPT sshd start
 fi
 
 if [[ $(get_config NTPD) == "yes" ]] ; then
@@ -492,6 +483,16 @@ if [[ $(get_config TIMELAPSE) == "yes" ]] ; then
         fi
     fi
 fi
+# Scheduled reboot (keeps long running cams fresh: RAM fragmentation, Wi-Fi driver)
+REBOOT_SCHEDULE=$(get_config REBOOT_SCHEDULE)
+REBOOT_HOUR=$(get_config REBOOT_HOUR)
+case "$REBOOT_HOUR" in ''|*[!0-9]*) REBOOT_HOUR=4 ;; esac
+[ $REBOOT_HOUR -gt 23 ] && REBOOT_HOUR=4
+if [ "$REBOOT_SCHEDULE" == "daily" ]; then
+    echo "0 $REBOOT_HOUR * * * sync; /sbin/reboot" >> /var/spool/cron/crontabs/root
+elif [ "$REBOOT_SCHEDULE" == "weekly" ]; then
+    echo "0 $REBOOT_HOUR * * 0 sync; /sbin/reboot" >> /var/spool/cron/crontabs/root
+fi
 $YI_HACK_PREFIX/usr/sbin/crond -c /var/spool/cron/crontabs/
 
 # Add MQTT Advertise
@@ -514,6 +515,12 @@ echo "PATH=/tmp/sd/yi-hack/bin:/tmp/sd/yi-hack/sbin:/tmp/sd/yi-hack/usr/bin:\$PA
 #rm -f "/tmp/sd/log/log_wifi_connected.tar.gz"
 
 unset TZ
+
+# Watchdog: RTSP, rmm, Wi-Fi, network reachability and services
+if [[ $(get_config WATCHDOG) != "no" ]] ; then
+    log "Starting watchdog"
+    $START_STOP_SCRIPT wd start
+fi
 
 log "Starting custom startup.sh"
 if [ -f "/tmp/sd/yi-hack/startup.sh" ]; then

@@ -53,6 +53,35 @@
             </tbody>
         </table>
 
+        <h5 class="tiny-margin strong">Logs</h5>
+        <hr class="no-margin"/>
+
+        <table class="u-full-width padded-table">
+            <tbody>
+            <tr class="row">
+                <td>
+                    <div class="standard-select">
+                        <select id="log-name">
+                            <option value="wd">Watchdog</option>
+                            <option value="wifi">Wi-Fi failsafe</option>
+                            <option value="boot">Boot (debug log)</option>
+                            <option value="dmesg">Kernel (dmesg)</option>
+                            <option value="processes">Processes / memory / disk</option>
+                        </select>
+                    </div>
+                </td>
+                <td>
+                    <input class="button-primary" type="button" id="button-log" value="Show Log"/>
+                </td>
+            </tr>
+            <tr class="row" id="tr-log" style="display: none;">
+                <td colspan="2">
+                    <pre id="log-text" style="max-height: 400px; overflow: auto; white-space: pre-wrap; font-size: 12px;"></pre>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
         <h5 class="tiny-margin strong">Reset to yi-hack default</h5>
         <hr class="no-margin"/>
 

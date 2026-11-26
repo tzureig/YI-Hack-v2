@@ -159,6 +159,7 @@ init_config()
 
 start_rtsp()
 {
+    rm -f /tmp/rtsp.stopped
     # If "null" use default
 
     if [ "$1" == "low" ] || [ "$1" == "high" ] || [ "$1" == "both" ]; then
@@ -238,16 +239,14 @@ start_rtsp()
             fi
         fi
 
-        WD_COUNT=$(ps | grep wd.sh | grep -v grep | grep -c ^)
-        if [ $WD_COUNT -eq 0 ]; then
-            (sleep 30; $YI_HACK_PREFIX/script/wd.sh >/dev/null) &
-        fi
+        start_wd
     fi
 }
 
 stop_rtsp()
 {
-    killall wd.sh
+    # Keep the watchdog running (network and services), just skip RTSP
+    touch /tmp/rtsp.stopped
     killall $RTSP_DAEMON
 }
 
@@ -401,6 +400,37 @@ start_wsdd()
     wsd_simple_server --pid_file /var/run/wsd_simple_server.pid --if_name $ONVIF_NETIF --xaddr "http://%s$D_HTTPD_PORT/onvif/device_service" -m `hostname` -n Yi
 }
 
+start_wd()
+{
+    WD_COUNT=$(ps | grep wd.sh | grep -v grep | grep -c ^)
+    if [ $WD_COUNT -eq 0 ]; then
+        (sleep 30; $YI_HACK_PREFIX/script/wd.sh >/dev/null 2>&1) &
+    fi
+}
+
+start_httpd()
+{
+    if [ "$(ps_program httpd)" == "started" ]; then
+        return
+    fi
+    touch /tmp/httpd.conf
+    httpd -p $HTTPD_PORT -h $YI_HACK_PREFIX/www/ -c /tmp/httpd.conf
+}
+
+start_sshd()
+{
+    if [ "$(ps_program dropbear)" == "started" ]; then
+        return
+    fi
+    mkdir -p $YI_HACK_PREFIX/etc/dropbear
+    if [ ! -f $YI_HACK_PREFIX/etc/dropbear/dropbear_ecdsa_host_key ]; then
+        dropbearkey -t ecdsa -f /tmp/dropbear_ecdsa_host_key
+        mv /tmp/dropbear_ecdsa_host_key $YI_HACK_PREFIX/etc/dropbear/
+    fi
+    chmod 0600 $YI_HACK_PREFIX/etc/dropbear/*
+    dropbear -R -B -p 0.0.0.0:22
+}
+
 stop_wsdd()
 {
     killall wsd_simple_server
@@ -498,6 +528,12 @@ if [ "$ACTION" == "start" ] ; then
         fi
     elif [ "$NAME" == "mqtt-config" ]; then
         mqtt-config > /dev/null &
+    elif [ "$NAME" == "httpd" ]; then
+        start_httpd
+    elif [ "$NAME" == "sshd" ]; then
+        start_sshd
+    elif [ "$NAME" == "wd" ]; then
+        start_wd
     elif [ "$NAME" == "mp4record" ]; then
         cd /home/app
         if [[ $(get_config TIME_OSD) == "yes" ]] ; then
@@ -542,6 +578,8 @@ elif [ "$ACTION" == "stop" ] ; then
         killall mqttv4
     elif [ "$NAME" == "mp4record" ]; then
         killall mp4record
+    elif [ "$NAME" == "wd" ]; then
+        killall wd.sh
     elif [ "$NAME" == "all" ]; then
         stop_rtsp
         stop_onvif
@@ -566,6 +604,12 @@ elif [ "$ACTION" == "status" ] ; then
         RES=$(ps_program mqtt-config)
     elif [ "$NAME" == "mp4record" ]; then
         RES=$(ps_program mp4record)
+    elif [ "$NAME" == "wd" ]; then
+        RES=$(ps_program wd.sh)
+    elif [ "$NAME" == "httpd" ]; then
+        RES=$(ps_program httpd)
+    elif [ "$NAME" == "sshd" ]; then
+        RES=$(ps_program dropbear)
     elif [ "$NAME" == "all" ]; then
         RES=$(ps_program rRTSPServer)
     fi

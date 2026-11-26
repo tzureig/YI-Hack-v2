@@ -8,9 +8,13 @@ MODEL_SUFFIX=$(cat /tmp/sd/yi-hack/model_suffix)
 
 START_STOP_SCRIPT=$YI_HACK_PREFIX/script/service.sh
 
-#LOG_FILE="/tmp/sd/wd.log"
+# The watchdog log lives in RAM (no SD wear) and is shown in the web UI
 LOG_FILE="/dev/null"
+LOG_LINES=0
 LOGWIFI_FILE="/tmp/sd/hack_wififailsafe.log"
+# Reason of the last reboot forced by the watchdog (kept on SD across reboots)
+LAST_REBOOT_FILE="$YI_HACK_PREFIX/etc/wd_last_reboot"
+NET_REBOOT_COUNT_FILE="$YI_HACK_PREFIX/etc/wd_net_reboots"
 
 COUNTER=0
 COUNTER_LIMIT=10
@@ -34,9 +38,31 @@ get_config()
 log()
 {
     echo "$(date +'%Y-%m-%d %H:%M:%S') - $1" >> $LOG_FILE
+    if [ "$LOG_FILE" != "/dev/null" ]; then
+        LOG_LINES=$((LOG_LINES+1))
+        # Keep the RAM log small: 300 lines at most
+        if [ $LOG_LINES -ge 300 ]; then
+            $YI_HACK_PREFIX/usr/bin/tail -n 150 $LOG_FILE > $LOG_FILE.tmp && mv $LOG_FILE.tmp $LOG_FILE
+            LOG_LINES=150
+        fi
+    fi
     if [ "$SYSLOG" == "yes" ]; then
         logger -t wd.sh "$1"
     fi
+}
+
+# Reboot the camera, remembering why (shown in the status page)
+wd_reboot()
+{
+    log "REBOOT: $1"
+    echo "$(date +'%Y-%m-%d %H:%M:%S') - $1" > $LAST_REBOOT_FILE
+    if [ "$SYSLOG" == "yes" ]; then
+        logger -t wd.sh "Rebooting: $1"
+    fi
+    sync
+    sleep 1
+    reboot
+    exit 0
 }
 
 restart_rtsp()
@@ -72,6 +98,11 @@ scan_processes()
     PID_GO2RTC=""
     PID_RMM=""
     PID_MQTTV4=""
+    PID_HTTPD=""
+    PID_DROPBEAR=""
+    PID_WSDD=""
+    PID_MDNSD=""
+    PID_CROND=""
     for P in /proc/[0-9]*; do
         { read -r C < $P/comm; } 2>/dev/null || continue
         case "$C" in
@@ -81,6 +112,11 @@ scan_processes()
             go2rtc) PID_GO2RTC=${P#/proc/} ;;
             rmm) PID_RMM=${P#/proc/} ;;
             mqttv4) PID_MQTTV4=${P#/proc/} ;;
+            httpd) PID_HTTPD=${P#/proc/} ;;
+            dropbear) PID_DROPBEAR=${P#/proc/} ;;
+            wsd_simple_serv*) PID_WSDD=${P#/proc/} ;;
+            mdnsd) PID_MDNSD=${P#/proc/} ;;
+            crond) PID_CROND=${P#/proc/} ;;
         esac
     done
 }
@@ -272,8 +308,7 @@ check_rmm()
 
     # Only reboot after 5 consecutive failures (~50 seconds with 10s interval)
     if [ $FAIL_COUNT -ge 5 ]; then
-        log "rmm failed 5 times consecutively, rebooting..."
-        reboot
+        wd_reboot "rmm (camera main process) not running"
     fi
 }
 
@@ -293,6 +328,16 @@ check_wifi()
     # Some camera models (e.g., r37gb) have broken wpa_cli that causes segfaults
 
     WIFI_CONNECTED=0
+
+    # Cameras on Ethernet: nothing to do while eth0 is up and has a route
+    if eth_connected; then
+        WIFI_FAILSAFE_COUNTER=0
+        return 0
+    fi
+    # No Wi-Fi interface at all: nothing to check
+    if [ ! -d /sys/class/net/wlan0 ]; then
+        return 0
+    fi
 
     # Method 0: carrier up and a route on wlan0 (an address is configured)
     # means connected for methods 1-3 too; read without starting processes
@@ -345,13 +390,14 @@ check_wifi()
             $YI_HACK_PREFIX/usr/bin/tail -n 145 "$LOGWIFI_FILE" > "$LOGWIFI_FILE.tmp" && mv "$LOGWIFI_FILE.tmp" "$LOGWIFI_FILE"
         fi
 
+        log "Wi-Fi connection lost (attempt $((WIFI_FAILSAFE_COUNTER + 1))/6)"
         echo -e "$(date): WiFi connection lost (failsafe attempt $((WIFI_FAILSAFE_COUNTER + 1))/6)" >> "$LOGWIFI_FILE"
 
         WIFI_FAILSAFE_COUNTER=$((WIFI_FAILSAFE_COUNTER + 1))
 
         if [ "$WIFI_FAILSAFE_COUNTER" -ge 6 ]; then
             echo -e "$(date): WiFi connection could not be restored after 6 attempts. Rebooting..." >> "$LOGWIFI_FILE"
-            reboot
+            wd_reboot "Wi-Fi connection lost and not restored after 6 attempts"
         else
             echo -e "$(date): Attempting WiFi reconnect..." >> "$LOGWIFI_FILE"
 
@@ -383,9 +429,165 @@ check_wifi()
     fi
 }
 
-if [[ $(get_config RTSP) == "no" ]] ; then
+
+# eth0 up with a route on it
+eth_connected()
+{
+    E_CARRIER=""
+    { read -r E_CARRIER < /sys/class/net/eth0/carrier; } 2>/dev/null
+    [ "$E_CARRIER" == "1" ] || return 1
+    while read -r IFACE REST; do
+        [ "$IFACE" == "eth0" ] && return 0
+    done < /proc/net/route
+    return 1
+}
+
+# GW_IP: default gateway from /proc/net/route ("" if none)
+get_gateway()
+{
+    GW_IP=""
+    while read -r IFACE DEST GW REST; do
+        if [ "$DEST" == "00000000" ] && [ "$GW" != "00000000" ] && [ ${#GW} -eq 8 ]; then
+            # Little endian hex -> dotted quad
+            GW_IP="$((0x${GW:6:2})).$((0x${GW:4:2})).$((0x${GW:2:2})).$((0x${GW:0:2}))"
+            return 0
+        fi
+    done < /proc/net/route
+    return 1
+}
+
+# Restart the services that keep the camera reachable if they crashed
+check_services()
+{
+    if [ "$CONF_HTTPD" == "yes" ] && [ -z "$PID_HTTPD" ]; then
+        log "httpd (web interface) not running, restarting"
+        $START_STOP_SCRIPT httpd start
+    fi
+    if [ "$CONF_SSHD" == "yes" ] && [ -z "$PID_DROPBEAR" ]; then
+        log "dropbear (ssh) not running, restarting"
+        $START_STOP_SCRIPT sshd start
+    fi
+    if [ "$CONF_ONVIF" == "yes" ] && [ "$CONF_ONVIF_WSDD" == "yes" ] && [ -z "$PID_WSDD" ]; then
+        log "wsd_simple_server (onvif discovery) not running, restarting"
+        $START_STOP_SCRIPT wsdd start
+    fi
+    if [ "$CONF_MDNSD" == "yes" ] && [ -z "$PID_MDNSD" ] && [ -d /tmp/mdns.d ]; then
+        log "mdnsd not running, restarting"
+        $YI_HACK_PREFIX/sbin/mdnsd /tmp/mdns.d
+    fi
+    if [ -z "$PID_CROND" ]; then
+        log "crond not running, restarting"
+        $YI_HACK_PREFIX/usr/sbin/crond -c /var/spool/cron/crontabs/
+    fi
+}
+
+# UPTIME_S: seconds since boot
+get_uptime()
+{
+    read -r UPTIME_S REST < /proc/uptime
+    UPTIME_S=${UPTIME_S%%.*}
+}
+
+# Ping the gateway (or WD_PING_HOST). The link can look fine while the
+# camera is unreachable (lost DHCP lease, router restarted, stuck driver):
+# renew the lease after ~90 s and reboot after WD_NET_REBOOT_MIN minutes.
+check_network()
+{
+    PING_TARGET="$CONF_PING_HOST"
+    if [ -z "$PING_TARGET" ]; then
+        get_gateway
+        PING_TARGET="$GW_IP"
+    fi
+    get_uptime
+    if [ -z "$PING_TARGET" ]; then
+        # No route at all: count as a failure only if we were online before
+        PING_OK=no
+    elif $YI_HACK_PREFIX/bin/busybox ping -c 1 -W 3 "$PING_TARGET" >/dev/null 2>&1 || \
+         $YI_HACK_PREFIX/bin/busybox ping -c 1 -W 3 "$PING_TARGET" >/dev/null 2>&1; then
+        PING_OK=yes
+    else
+        PING_OK=no
+    fi
+
+    if [ "$PING_OK" == "yes" ]; then
+        if [ $NET_FAIL -gt 0 ]; then
+            log "Network reachable again ($PING_TARGET)"
+        fi
+        NET_FAIL=0
+        NET_EVER_OK=yes
+        NET_FAIL_SINCE=0
+        # Online for 10 minutes: forget previous network reboots
+        if [ $NET_OK_SINCE -eq 0 ]; then
+            NET_OK_SINCE=$UPTIME_S
+        elif [ -f $NET_REBOOT_COUNT_FILE ] && [ $((UPTIME_S - NET_OK_SINCE)) -ge 600 ]; then
+            rm -f $NET_REBOOT_COUNT_FILE
+        fi
+        return 0
+    fi
+
+    NET_OK_SINCE=0
+    # Some routers never answer to ping: only act if the target answered once
+    [ "$NET_EVER_OK" == "yes" ] || return 0
+
+    NET_FAIL=$((NET_FAIL+1))
+    [ $NET_FAIL_SINCE -eq 0 ] && NET_FAIL_SINCE=$UPTIME_S
+    log "Network check failed ($NET_FAIL), target ${PING_TARGET:-none}"
+
+    if [ $NET_FAIL -eq 3 ] || [ $((NET_FAIL % 10)) -eq 0 ]; then
+        log "Renewing network configuration"
+        if eth_connected; then
+            $YI_HACK_PREFIX/script/ethdhcp.sh >/dev/null 2>&1
+        else
+            $YI_HACK_PREFIX/script/wifidhcp.sh >/dev/null 2>&1
+        fi
+    fi
+
+    if [ "$CONF_NET_REBOOT_MIN" -gt 0 ] 2>/dev/null; then
+        # Back off after consecutive network reboots (router off for hours)
+        NRC=0
+        [ -f $NET_REBOOT_COUNT_FILE ] && read -r NRC < $NET_REBOOT_COUNT_FILE
+        case "$NRC" in ''|*[!0-9]*) NRC=0 ;; esac
+        [ $NRC -gt 7 ] && NRC=7
+        LIMIT=$((CONF_NET_REBOOT_MIN * 60 * (NRC + 1)))
+        if [ $((UPTIME_S - NET_FAIL_SINCE)) -ge $LIMIT ]; then
+            echo $((NRC + 1)) > $NET_REBOOT_COUNT_FILE
+            wd_reboot "network unreachable ($PING_TARGET) for $((LIMIT / 60)) minutes"
+        fi
+    fi
+}
+
+if [[ $(get_config WATCHDOG) == "no" ]] ; then
     exit
 fi
+
+# Single instance
+OLD_PID=""
+[ -f /var/run/wd.pid ] && read -r OLD_PID < /var/run/wd.pid
+if [ -n "$OLD_PID" ] && [ "$OLD_PID" != "$$" ] && grep -q wd.sh "/proc/$OLD_PID/cmdline" 2>/dev/null; then
+    exit
+fi
+echo $$ > /var/run/wd.pid
+
+CONF_RTSP=$(get_config RTSP)
+CONF_HTTPD=$(get_config HTTPD)
+CONF_SSHD=$(get_config SSHD)
+CONF_ONVIF=$(get_config ONVIF)
+CONF_ONVIF_WSDD=$(get_config ONVIF_WSDD)
+CONF_MDNSD=$(get_config MDNSD)
+CONF_SERVICES=$(get_config WD_SERVICES)
+CONF_NET_CHECK=$(get_config WD_NET_CHECK)
+CONF_PING_HOST=$(get_config WD_PING_HOST)
+case "$CONF_PING_HOST" in *[!A-Za-z0-9.:_-]*) CONF_PING_HOST="" ;; esac
+CONF_NET_REBOOT_MIN=$(get_config WD_NET_REBOOT_MIN)
+case "$CONF_NET_REBOOT_MIN" in ''|*[!0-9]*) CONF_NET_REBOOT_MIN=15 ;; esac
+if [ "$(get_config WD_LOG)" != "no" ]; then
+    LOG_FILE="/tmp/wd.log"
+fi
+NET_FAIL=0
+NET_FAIL_SINCE=0
+NET_OK_SINCE=0
+NET_EVER_OK=no
+LOOP=0
 
 case $(get_config RTSP_PORT) in
     ''|*[!0-9]*) RTSP_PORT=554 ;;
@@ -406,25 +608,36 @@ if [ ! -z "$(get_config SYSLOG_SERVER)" ] && [ -S /dev/log ]; then
     SYSLOG=yes
 fi
 
-log "Starting RTSP watchdog..."
+log "Starting watchdog (rtsp=$CONF_RTSP services=$CONF_SERVICES network=$CONF_NET_CHECK reboot_after=${CONF_NET_REBOOT_MIN}min)"
 
 while true
 do
+    LOOP=$((LOOP+1))
     scan_processes
     CPU_SAMPLED=no
-    if [[ "$RTSP_ALT" == "standard" ]] ; then
-        check_rtsp
-    elif [[ "$RTSP_ALT" == "alternative" ]] ; then
-        check_rtsp_alt
-    else
-        check_rtsp_go2rtc
+    # RTSP is skipped while it was stopped on purpose (service.sh rtsp stop)
+    if [ "$CONF_RTSP" == "yes" ] && [ ! -f /tmp/rtsp.stopped ]; then
+        if [[ "$RTSP_ALT" == "standard" ]] ; then
+            check_rtsp
+        elif [[ "$RTSP_ALT" == "alternative" ]] ; then
+            check_rtsp_alt
+        else
+            check_rtsp_go2rtc
+        fi
     fi
     check_rmm
     check_mqtt
     check_wifi
+    # Every ~30 s: network reachability; every ~60 s: services
+    if [ "$CONF_NET_CHECK" != "no" ] && [ $((LOOP % 3)) -eq 0 ]; then
+        check_network
+    fi
+    if [ "$CONF_SERVICES" != "no" ] && [ $((LOOP % 6)) -eq 0 ]; then
+        check_services
+    fi
 
-    echo 1500 > /sys/class/net/eth0/mtu
-    echo 1500 > /sys/class/net/wlan0/mtu
+    [ -d /sys/class/net/eth0 ] && echo 1500 > /sys/class/net/eth0/mtu
+    [ -d /sys/class/net/wlan0 ] && echo 1500 > /sys/class/net/wlan0/mtu
 
     if [ $COUNTER -eq 0 ]; then
         sleep $INTERVAL

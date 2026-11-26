@@ -26,6 +26,29 @@ APP.maintenance = (function($) {
         $(document).on("click", '#button-upgrade', function(e) {
             upgradeFirmware();
         });
+        $(document).on("click", '#button-log', function(e) {
+            showLog();
+        });
+    }
+
+    function showLog() {
+        var name = $('#log-name').prop('value');
+        $('#tr-log').show();
+        $('#log-text').text("Loading...");
+        $.ajax({
+            type: "GET",
+            url: 'cgi-bin/logs.sh?name=' + name,
+            dataType: "text",
+            cache: false,
+            success: function(data) {
+                $('#log-text').text(data);
+                var pre = $('#log-text')[0];
+                pre.scrollTop = pre.scrollHeight;
+            },
+            error: function(response) {
+                $('#log-text').text("Error while loading the log");
+            }
+        });
     }
 
     function saveConfig() {

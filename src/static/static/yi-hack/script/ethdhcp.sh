@@ -25,7 +25,7 @@ if [ -z $STATIC_IP ] || [ -z $STATIC_MASK ]; then
         udhcpc -i eth0 -b -s /home/app/script/default.script -x hostname:$HN
     fi
 else
-    ifconfig wlan0 $STATIC_IP netmask $STATIC_MASK
+    ifconfig eth0 $STATIC_IP netmask $STATIC_MASK
     if [ ! -z $STATIC_GW ]; then
         route add -net 0.0.0.0 gw $STATIC_GW
     fi

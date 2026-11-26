@@ -47,6 +47,19 @@ APP.status = (function($) {
                 $('#wlan_essid').html(data.wlan_essid + "<input class=\"button-primary\" type=\"button\" id=\"button-wifi-edit\" value=\"Edit\" style=\"margin-left:40px;\" onclick=\"window.location.href='?page=wifi'\"/>");
                 $('#uptime').text(String.format("%t", parseInt(data.uptime)));
                 $('#memory').text("" + data.free_memory + "/" + data.total_memory + " KB");
+                if (data.swap_total && data.swap_total != "0")
+                    $('#swap').text("" + data.swap_free + "/" + data.swap_total + " KB");
+                else
+                    $('#swap').text("disabled");
+                if (data.temperature)
+                    $('#tr_temperature').show();
+                $('#wlan_dbm_text').text(data.wlan_dbm ? "(" + data.wlan_dbm + " dBm)" : "");
+                if (!data.wd_last_event)
+                    $('#wd_last_event').text("-");
+                $('.svc-state').each(function() {
+                    var st = $(this).text();
+                    $(this).css('color', st == 'running' ? '#2e9e44' : (st == 'stopped' ? '#888' : ''));
+                });
                 wifiStrength = parseInt((parseInt(data.wlan_strength) * 100) / 70);
                 if (wifiStrength >= 80) {
                     $('#wlan_strength').attr("src", "img/wlan_strong_signal.png")

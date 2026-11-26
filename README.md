@@ -119,6 +119,15 @@ This custom firmware contains features replicated from the [yi-hack-MStar](https
   - Swap File on SD.
   - Online firmware upgrade.
   - Load/save/reset configuration.
+  - Reachability watchdog (runs also when RTSP is disabled):
+    - restarts the RTSP server, the web interface, SSH, ONVIF discovery, mDNS and cron if they crash
+    - pings the router (or a host of your choice): renews DHCP and, if the camera stays offline, reboots it (default after 15 minutes, with back-off to avoid reboot loops)
+    - Ethernet aware: no Wi-Fi failsafe reboots for cameras connected by cable
+    - remembers why it rebooted the camera (shown in the status page)
+  - Scheduled reboot (daily or weekly, at the hour you choose).
+  - Health endpoint for monitoring tools: http://IP-CAM/cgi-bin/health.sh (HTTP 200 = ok, 503 = degraded).
+  - Status page with services, swap, SD usage, temperature and Wi-Fi signal in dBm.
+  - Log viewer in the Maintenance page (watchdog, Wi-Fi failsafe, boot, dmesg, processes).
 
 
 ## Performance

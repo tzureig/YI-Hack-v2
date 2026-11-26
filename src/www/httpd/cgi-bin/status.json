@@ -44,6 +44,41 @@ WLAN_ESSID=$(iwconfig wlan0 | grep ESSID | cut -d\" -f2)
 WLAN_STRENGTH=$(cat /proc/net/wireless | grep wlan0 | awk '{ print $3 }' | sed 's/\.$//')
 FORCE_NIGHT=$(/tmp/sd/yi-hack/script/force_night.sh status)
 
+# Health
+SWAP_TOTAL=$(awk '/^SwapTotal:/{print $2}' /proc/meminfo)
+SWAP_FREE=$(awk '/^SwapFree:/{print $2}' /proc/meminfo)
+SD_SIZE=$(df -h | grep -m1 '/tmp/sd' | grep mmc | awk '{print $3 " / " $2}')
+[ -z "$SD_SIZE" ] && SD_SIZE="N/A"
+TEMPERATURE=""
+if [ -r /sys/class/thermal/thermal_zone0/temp ]; then
+    T=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null)
+    case "$T" in
+        ''|*[!0-9-]*) ;;
+        *) if [ ${#T} -gt 3 ]; then TEMPERATURE="$((T/1000)) °C"; else TEMPERATURE="$T °C"; fi ;;
+    esac
+fi
+WLAN_DBM=$(awk '/wlan0/{gsub(/\./,"",$4); print $4}' /proc/net/wireless)
+if eth_up=$(cat /sys/class/net/eth0/carrier 2>/dev/null) && [ "$eth_up" == "1" ]; then
+    LINK="Ethernet"
+else
+    LINK="Wi-Fi"
+fi
+
+# Services: one ps for all
+PS_OUT=$(ps)
+svc() {
+    if echo "$PS_OUT" | grep -v grep | grep -qE "$1"; then echo "running"; else echo "stopped"; fi
+}
+SVC_RTSP=$(svc "rRTSPServer|rtsp_server_yi|go2rtc")
+SVC_ONVIF=$(svc "onvif_notify_server")
+SVC_SSH=$(svc "dropbear")
+SVC_FTP=$(svc "pure-ftpd|tcpsvd")
+SVC_MQTT=$(svc "mqttv4")
+SVC_WD=$(svc "wd.sh")
+WD_LAST_REBOOT=$(cat /tmp/sd/yi-hack/etc/wd_last_reboot 2>/dev/null | head -n1 | tr -d '"\\')
+[ -z "$WD_LAST_REBOOT" ] && WD_LAST_REBOOT="none"
+WD_LAST_EVENT=$(tail -n1 /tmp/wd.log 2>/dev/null | tr -d '"\\')
+
 # Yeah, it's pretty ugly.. but hey, it works.
 
 printf "{\n"
@@ -68,6 +103,20 @@ printf "\"%s\":\"%s\",\n" "gateway"         "$GATEWAY"
 printf "\"%s\":\"%s\",\n" "mac_addr"        "$MAC_ADDR"
 printf "\"%s\":\"%s\",\n" "wlan_essid"      "$WLAN_ESSID"
 printf "\"%s\":\"%s\",\n" "wlan_strength"   "$WLAN_STRENGTH"
-printf "\"%s\":\"%s\"\n"  "force_night"     "$FORCE_NIGHT"
+printf "\"%s\":\"%s\",\n" "force_night"     "$FORCE_NIGHT"
+printf "\"%s\":\"%s\",\n" "swap_total"      "$SWAP_TOTAL"
+printf "\"%s\":\"%s\",\n" "swap_free"       "$SWAP_FREE"
+printf "\"%s\":\"%s\",\n" "sd_size"         "$SD_SIZE"
+printf "\"%s\":\"%s\",\n" "temperature"     "$TEMPERATURE"
+printf "\"%s\":\"%s\",\n" "wlan_dbm"        "$WLAN_DBM"
+printf "\"%s\":\"%s\",\n" "link"            "$LINK"
+printf "\"%s\":\"%s\",\n" "svc_rtsp"        "$SVC_RTSP"
+printf "\"%s\":\"%s\",\n" "svc_onvif"       "$SVC_ONVIF"
+printf "\"%s\":\"%s\",\n" "svc_ssh"         "$SVC_SSH"
+printf "\"%s\":\"%s\",\n" "svc_ftp"         "$SVC_FTP"
+printf "\"%s\":\"%s\",\n" "svc_mqtt"        "$SVC_MQTT"
+printf "\"%s\":\"%s\",\n" "svc_wd"          "$SVC_WD"
+printf "\"%s\":\"%s\",\n" "wd_last_reboot"  "$WD_LAST_REBOOT"
+printf "\"%s\":\"%s\"\n"  "wd_last_event"   "$WD_LAST_EVENT"
 
 printf "}"
