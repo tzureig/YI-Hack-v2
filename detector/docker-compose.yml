@@ -1,0 +1,13 @@
+services:
+  yi-detector:
+    image: ghcr.io/tzureig/yi-detector:latest
+    # or build it yourself:
+    # build: .
+    container_name: yi-detector
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./config.yaml:/config/config.yaml:ro
+    environment:
+      - TZ=Europe/Berlin

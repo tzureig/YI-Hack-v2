@@ -2,6 +2,8 @@
 
 Die Kameras laden Updates aus den **Releases** dieses Repositorys (`AUTO_UPDATE_REPO`, ab Werk `tzureig/YI-Hack-Tiz`).
 
+> **Wichtig:** Die Kameras laden Releases ohne GitHub-Login. Das Repository muss deshalb **öffentlich** sein, sonst schlägt das Auto-Update fehl.
+
 ## Release erstellen
 
 Variante A – im Browser: *Actions → Release → Run workflow* → Version eintragen (z. B. `1.0.1`) → *Run*.

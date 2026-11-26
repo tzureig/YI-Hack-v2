@@ -1,0 +1,43 @@
+# yi-detector configuration (copy to config.yaml)
+
+cameras:
+  # RTSP: one permanent connection, newest frame every "interval" seconds.
+  # The substream (ch0_1, 640x360) is light and good enough for detection.
+  - name: Garten
+    url: rtsp://USER:PASS@192.168.1.50/ch0_1.h264
+    interval: 1          # seconds between detections
+    off_delay: 10        # seconds an object stays "present" after the last hit
+
+  # HTTP snapshot: lighter for the camera, one picture per detection
+  - name: Wohnzimmer
+    url: http://192.168.1.51/cgi-bin/snapshot.sh?res=high
+    username: USER
+    password: PASS
+    interval: 2
+    objects: [person, dog]   # only these on this camera
+
+# What to detect and how to draw it (COCO names, colour = RGB)
+objects:
+  person: {name: Person, color: [0, 102, 255], min_score: 0.5}   # blue
+  dog:    {name: Hund,   color: [0, 200, 0],   min_score: 0.5}   # green
+  cat:    {name: Katze,  color: [255, 165, 0], min_score: 0.5}   # orange
+  # bird:  {name: Vogel, color: [255, 165, 0]}
+  # horse: {name: Pferd, color: [255, 165, 0]}
+
+# Optional: Home Assistant via MQTT (auto discovery)
+mqtt:
+  host: 192.168.1.10
+  port: 1883
+  username: mqttuser
+  password: mqttpass
+  # topic_prefix: yi-detector
+  # discovery_prefix: homeassistant
+  # image_interval: 2      # seconds between annotated pictures on MQTT
+
+# Web interface / MJPEG stream
+http:
+  port: 8090
+  # username: admin        # optional basic auth
+  # password: secret
+
+# threads: 0               # ONNX threads (0 = all cores)

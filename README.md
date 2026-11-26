@@ -8,6 +8,7 @@ Basiert auf [roleoroleo/yi-hack-Allwinner-v2](https://github.com/roleoroleo/yi-h
 * **Sicherheit:** SSH-Passwort nur als SHA-512-Hash, Weboberfläche mit SHA-512-Hash, Passwörter werden nie an den Browser geschickt oder in Logs gezeigt, Telnet/FTP standardmäßig aus, kein SSH-Login mit leerem Passwort.
 * **Snapshots, die nicht abstürzen:** Ein einziger Decoder, auch wenn Home Assistant, Frigate und UniFi gleichzeitig abfragen. Dazu ein kurzer Cache und ein Ersatzbild, falls etwas schiefgeht.
 * **Bild + Ton live:** Haupt- und Substream (H.264 + AAC) gleichzeitig per RTSP und ONVIF, ab Werk eingeschaltet.
+* **Personen- & Tiererkennung mit Rahmen** ([detector/](detector/README.md)): Person blau, Hund grün, auch ohne Bewegung – als Home-Assistant-Add-on oder Docker, mit MQTT-Sensoren und Live-Stream.
 * **Home Assistant, Frigate, UniFi Protect:** fertige Anleitungen und Beispielkonfigurationen.
 * **Weboberfläche:** Statusseite mit Diensten, Speicher, SD, Temperatur, WLAN-dBm, Update-Status; Log-Ansicht; Health-Endpoint für Monitoring.
 
@@ -27,7 +28,9 @@ Basiert auf [roleoroleo/yi-hack-Allwinner-v2](https://github.com/roleoroleo/yi-h
 | Frigate | [docs/FRIGATE.md](docs/FRIGATE.md) |
 | UniFi Protect | [docs/UNIFI_PROTECT.md](docs/UNIFI_PROTECT.md) |
 | Feste IP-Adresse | [docs/FESTE_IP.md](docs/FESTE_IP.md) |
+| Personen-/Tiererkennung (yi-detector) | [detector/README.md](detector/README.md) |
 | Sicherheit & Passwörter | [docs/SICHERHEIT.md](docs/SICHERHEIT.md) |
+| Projektwissen (Second Brain) | [docs/SECOND_BRAIN.md](docs/SECOND_BRAIN.md) |
 | Neue Version veröffentlichen | [docs/RELEASE.md](docs/RELEASE.md) |
 | Original-README (englisch) | [docs/README_upstream.md](docs/README_upstream.md) |
 

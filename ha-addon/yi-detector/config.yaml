@@ -1,0 +1,48 @@
+name: YI Detector
+version: "1.0.0"
+slug: yi_detector
+description: Personen- und Tiererkennung für YI-Hack-Tiz-Kameras (Person blau, Hund grün) – auch ohne Bewegung
+url: https://github.com/tzureig/YI-Hack-Tiz/tree/main/detector
+arch:
+  - amd64
+  - aarch64
+image: ghcr.io/tzureig/yi-detector
+init: false
+startup: application
+boot: auto
+ports:
+  8090/tcp: 8090
+ports_description:
+  8090/tcp: Weboberfläche / MJPEG-Stream mit Rahmen
+webui: http://[HOST]:[PORT:8090]/
+services:
+  - mqtt:want
+options:
+  cameras:
+    - name: Garten
+      url: rtsp://USER:PASS@192.168.1.50/ch0_1.h264
+      interval: 1
+  mqtt:
+    host: core-mosquitto
+    port: 1883
+    username: ""
+    password: ""
+  http:
+    port: 8090
+schema:
+  cameras:
+    - name: str
+      url: str
+      username: str?
+      password: password?
+      interval: float?
+      off_delay: float?
+  mqtt:
+    host: str?
+    port: port?
+    username: str?
+    password: password?
+  http:
+    port: port?
+    username: str?
+    password: password?

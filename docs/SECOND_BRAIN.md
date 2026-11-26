@@ -1,0 +1,127 @@
+---
+title: YI-Hack-Tiz – Second Brain
+tags: [yi-hack, kamera, firmware, home-assistant, frigate, unifi, smarthome]
+status: aktiv
+erstellt: 2026-11-26
+aktualisiert: 2026-11-26
+repo: https://github.com/tzureig/YI-Hack-Tiz
+---
+
+# YI-Hack-Tiz – Second Brain
+
+> Alles, was man über dieses Projekt wissen muss, an einem Ort: was es ist, wie es aufgebaut ist, welche Entscheidungen warum getroffen wurden, wo welche Datei liegt und wie man weitermacht.
+
+## 1. Worum geht es?
+
+* **Ziel:** Yi-Kameras (Allwinner-Chip) mit einer eigenen Firmware von der SD-Karte betreiben: immer erreichbar, sicher, automatisch aktuell, kompatibel mit **Home Assistant**, **Frigate** und **UniFi Protect**; dazu **Personen-/Tiererkennung mit farbigen Rahmen** (Person blau, Hund grün, auch ohne Bewegung).
+* **Basis:** Fork von [roleoroleo/yi-hack-Allwinner-v2](https://github.com/roleoroleo/yi-hack-Allwinner-v2) inklusive der vollen Git-Historie, damit der wöchentliche Abgleich mit dem Original sauber zusammenführen kann.
+* **Repo:** `tzureig/YI-Hack-Tiz`, Branch `main`. Releases = Firmware-Pakete pro Modell.
+
+## 2. Architektur auf einen Blick
+
+```
+                 ┌──────────────── Kamera (SD-Karte: /tmp/sd/yi-hack) ────────────────┐
+ Yi-Firmware ──► │ system.sh (Boot) ─► rmm/mp4record (Yi)  ─► Ringpuffer /dev/shm      │
+                 │                    ├─ rRTSPServer / go2rtc ─► RTSP ch0_0/ch0_1/ch0_2│──► HA / Frigate / UniFi
+                 │                    ├─ httpd (Web-UI, CGI, ONVIF) ─► :80             │──► Browser, ONVIF
+                 │                    ├─ mqttv4 (Ereignisse) ─► MQTT-Broker            │──► Home Assistant
+                 │                    ├─ wd.sh (Watchdog, alle 10 s)                   │
+                 │                    └─ crond: auto_update.sh, Neustart, Aufräumen    │
+                 └────────────────────────────────────────────────────────────────────┘
+                                         │ RTSP-Substream / Snapshot
+                                         ▼
+                 ┌──────── Server / Home Assistant ────────┐
+                 │ yi-detector (Docker / HA-Add-on)         │──► MJPEG + Bild mit Rahmen
+                 │ YOLOv8n ONNX, jedes Bild komplett        │──► MQTT: Person/Hund an/aus
+                 └──────────────────────────────────────────┘
+ GitHub Actions: build.yaml (Test) · release.yaml (Pakete + SHA256SUMS) · upstream-sync.yaml (wöchentl. PR) · detector-image.yaml (ghcr)
+```
+
+## 3. Wo liegt was?
+
+| Bereich | Pfad im Repo | Auf der Kamera |
+| --- | --- | --- |
+| Boot-Ablauf | `src/static/static/yi-hack/script/system.sh` | `/tmp/sd/yi-hack/script/system.sh` |
+| Dienste starten/stoppen | `src/static/static/yi-hack/script/service.sh` | `… service.sh rtsp|onvif|httpd|sshd|wd start` |
+| Watchdog | `src/static/static/yi-hack/script/wd.sh` | Log: `/tmp/wd.log` (RAM) |
+| Auto-Update | `src/static/static/yi-hack/script/auto_update.sh` | Status `etc/auto_update.status`, Log `etc/auto_update.log` |
+| Standardwerte / Migration | `src/static/static/yi-hack/etc/system.conf`, `script/check_conf.sh` | `etc/system.conf` |
+| Web-Oberfläche | `src/www/httpd/htdocs/` (HTML/JS), `src/www/httpd/cgi-bin/` | `/tmp/sd/yi-hack/www/` |
+| Webserver-Passwort-Hash | `src/busybox/auth_hash.patch`, `.config` (`FEATURE_HTTPD_AUTH_MD5`) | `/tmp/httpd.conf` |
+| Snapshots | `src/www/httpd/cgi-bin/snapshot.sh` | Cache `/tmp/snapshot_*.jpg` |
+| Pakete bauen | `scripts/compile.sh`, `scripts/pack_fw.sh` | – |
+| Erkennung | `detector/` (Python, Docker), `ha-addon/yi-detector/` | läuft **nicht** auf der Kamera |
+| Doku | `docs/*.md`, `README.md` | – |
+
+## 4. Wichtige Entscheidungen (und warum)
+
+| Entscheidung | Grund |
+| --- | --- |
+| Watchdog läuft **unabhängig von RTSP** | Vorher endete er, wenn RTSP aus war → keine WLAN-Überwachung mehr. |
+| Netzwerk-Check per **Ping zum Router**, reagiert nur, wenn der Router früher schon geantwortet hat | WLAN kann „verbunden“ melden und trotzdem tot sein; manche Router antworten nie auf Ping → so gibt es keine falschen Neustarts. |
+| Neustart nach `WD_NET_REBOOT_MIN` (15 min) mit **wachsender Wartezeit** (×1 … ×8) | Ein ausgeschalteter Router darf keine Neustart-Schleife auslösen. |
+| WLAN-Energiesparen ab Werk **aus** | Bekannte Ursache für Aussetzer und hohe Latenz. |
+| SSH-Passwort **nur als SHA-512-Hash** | Wird nur zur Prüfung gebraucht. |
+| Kamera-Login (RTSP/ONVIF) bleibt **im Klartext auf der SD** | RTSP-Digest und ONVIF-WS-Security brauchen das Passwort selbst. Ohne würden HA, Frigate und UniFi nicht funktionieren. Ausgleich: wird nie an den Browser geschickt, nie geloggt, der Webserver bekommt nur einen Hash. |
+| `********` als Platzhalter in der Weboberfläche | Passwörter verlassen die Kamera nicht. Wer das Feld unverändert lässt, behält den gespeicherten Wert. |
+| Updates nur mit **SHA-256 aus dem Release** + Modellprüfung | Kaputte Downloads oder falsche Pakete dürfen nie installiert werden. |
+| Updates **nachts**, Check **mittags**, Minute aus der MAC-Adresse | Kein Ausfall tagsüber; mehrere Kameras fragen GitHub nicht gleichzeitig an. |
+| Snapshot: **ein** Decoder, Cache 2 s, Ersatzbild | Mehrere gleichzeitige Decoder füllten den RAM → Neustarts. |
+| Haupt- + Substream ab Werk an | Frigate (Erkennung auf Sub), UniFi (Vorschau), HA (Kacheln) brauchen beide. |
+| Erkennung **auf dem Server**, nicht auf der Kamera | ~64 MB RAM, schwache CPU, kein Zugriff auf den Video-Encoder für Overlays. Die eingebaute Yi-KI reagiert nur auf Bewegung und liefert keine Rahmen. |
+| yi-detector prüft **jedes Bild komplett** | Nur so werden stillstehende Personen/Tiere erkannt (Frigate sucht vor allem in bewegten Bereichen). |
+| Tags werden vom **Release-Workflow** gesetzt | Die Claude-Code-Sitzung darf keine Tags pushen; ein Release startet man daher per *Actions → Release → Run workflow*. |
+
+## 5. Betrieb – Spickzettel
+
+* **Weboberfläche:** `http://KAMERA-IP` → Status (Dienste, Update, Watchdog), Configuration (Watchdog, Firmware update, Authentication), Maintenance (Logs).
+* **Health:** `http://KAMERA-IP/cgi-bin/health.sh` → 200 ok / 503 gestört.
+* **Streams:** `rtsp://USER:PASS@IP/ch0_0.h264` (Haupt), `ch0_1` (Sub), `ch0_2` (nur Ton).
+* **Erkennung:** `http://SERVER:8090/` (alle Kameras mit Rahmen).
+* **Neues Release:** GitHub → *Actions → Release → Run workflow* → Version (z. B. `1.0.1`). Kameras installieren es in der folgenden Nacht.
+* **Original-Updates übernehmen:** Montags kommt automatisch ein PR „Upstream: …“ → Build grün → mergen → Release.
+* **Kamera hängt?** Logs: *Maintenance → Logs → Watchdog*. Letzter Neustart-Grund steht auf der Statusseite.
+
+## 6. Konfigurationsschlüssel (neu in YI-Hack-Tiz)
+
+| Schlüssel | Standard | Bedeutung |
+| --- | --- | --- |
+| `WATCHDOG` | yes | Watchdog an/aus |
+| `WD_SERVICES` | yes | abgestürzte Dienste neu starten |
+| `WD_NET_CHECK` | yes | Router-Ping |
+| `WD_PING_HOST` | (leer = Gateway) | Ping-Ziel |
+| `WD_NET_REBOOT_MIN` | 15 | Minuten offline bis Neustart (0 = nie) |
+| `WD_LOG` | yes | Watchdog-Log im RAM |
+| `REBOOT_SCHEDULE` / `REBOOT_HOUR` | no / 4 | geplanter Neustart (daily/weekly) |
+| `AUTO_UPDATE` | yes | yes = nachts installieren, check = nur prüfen, no = aus |
+| `AUTO_UPDATE_HOUR` | 3 | Installationsstunde |
+| `AUTO_UPDATE_REPO` | tzureig/YI-Hack-Tiz | Quelle der Releases |
+| `SNAPSHOT_CACHE` | 2 | Sekunden Snapshot-Cache |
+| `SSH_PASSWORD_HASH` | – | SHA-512-Hash (wird automatisch gesetzt) |
+| geändert: `TELNETD`, `FTPD` | no | ab Werk aus |
+| geändert: `WIFI_POWERSAVE` | no | ab Werk aus |
+| geändert: `RTSP_STREAM`, `ONVIF_PROFILE` | both | beide Streams |
+
+## 7. Getestet
+
+* Kompletter Bau aller 20 Modell-Pakete (Toolchain sunxi-musl gcc 6.4) und Release-Workflow auf GitHub Actions.
+* BusyBox-ARM-Binary unter QEMU: `sha256sum`, `mkpasswd -m sha512`, **httpd mit SHA-512-Hash** (falsch → 401, richtig → 200, ONVIF-Pfad bleibt offen).
+* Watchdog in nachgebauter Kamera-Umgebung: Dienste-Neustart, Netzwerkausfall → DHCP → Neustart mit Grund, rmm-Ausfall.
+* Auto-Update: echtes Paket → Prüfsumme ok → Installation vorbereitet; manipuliertes Paket → abgelehnt.
+* Snapshot: 5 gleichzeitige Abrufe → 1 Decoder; Decoder-Fehler → Ersatzbild.
+* Passwort-Speicherung: Hash verifiziert, `********` behält den Wert, Browser sieht keine Passwörter.
+* yi-detector: Person 92 % (blau), Hund 89–93 % (grün, auch sitzend/still), Pferd (orange); RTSP- und Snapshot-Quelle, MJPEG, JSON, MQTT-Discovery.
+* **Noch nicht** auf echter Kamera-Hardware getestet → erst mit einer Kamera ausprobieren.
+
+## 8. Offene Ideen / nächste Schritte
+
+* [ ] **Repo ist privat** → Kameras (ohne GitHub-Login) können Releases nicht laden; Auto-Update und „Upgrade Firmware“ funktionieren erst, wenn das Repo öffentlich ist (*Settings → General → Danger Zone → Change visibility*). Alternativ `AUTO_UPDATE_REPO` auf ein öffentliches Repo stellen.
+* [ ] Erste echte Kamera mit 1.0.0 flashen und 24 h beobachten (Watchdog-Log, Update-Status).
+* [ ] GHCR-Paket `yi-detector` in GitHub auf **public** stellen (für das HA-Add-on nötig).
+* [ ] Optional: Zonen/Masken im yi-detector (nur Garten, nicht Straße).
+* [ ] Optional: Rollback-Paket für Updates auf der SD aufbewahren.
+* [ ] Optional: Gesichter / Paketerkennung (anderes Modell).
+
+## 9. Verlauf
+
+* **2026-11-26** – Projekt gestartet: Analyse von yi-hack-Allwinner-v2, Watchdog-Ausbau, Statusseite/Logs/Health, Fehlerbehebungen (Syslog-Feld, Ethernet-Static-IP, Watchdog-Ende bei RTSP-Stopp). Sicherheit (SHA-512), Auto-Update mit Prüfsumme, Snapshot-Cache, HA/Frigate/UniFi-Doku, GitHub-Workflows, Repo `tzureig/YI-Hack-Tiz` mit voller Historie, Release 1.0.0, yi-detector (Person blau, Hund grün).
