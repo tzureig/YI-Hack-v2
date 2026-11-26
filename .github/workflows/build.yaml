@@ -1,11 +1,13 @@
 name: Build
 
+# Build every camera package on each push / pull request (no release)
 on:
   push:
-    tags:
     branches:
       - main
       - master
+  pull_request:
+  workflow_dispatch:
 
 env:
   SUNXI_TOOLCHAIN: /opt/yi/toolchain-sunxi-musl
@@ -14,29 +16,30 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Install deps
         run: |
-          sudo apt update
-          sudo apt install -y git unzip build-essential \
-            bison bisonc++ libbison-dev autoconf autotools-dev \
-            automake libssl-dev zlib1g-dev libzzip-dev flex libfl-dev \
+          sudo apt-get update
+          sudo apt-get install -y git unzip build-essential \
+            bison bisonc++ libbison-dev autoconf autotools-dev libtool libtool-bin \
+            automake libssl-dev zlib1g-dev libzzip-dev flex libfl-dev cmake \
             yui-compressor closure-compiler optipng jpegoptim node-less \
-            sassc sass-spec libhtml-tidy-perl libxml2-utils rsync qemu-user
+            sassc sass-spec libhtml-tidy-perl libxml2-utils rsync qemu-user pkg-config wget bzip2 file
           command -v qemu-arm-static || sudo ln -s "$(command -v qemu-arm)" /usr/local/bin/qemu-arm-static
       - name: Download toolchain
         run: |
-          git clone https://github.com/lindenis-org/lindenis-v536-prebuilt
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/lindenis-org/lindenis-v536-prebuilt
+          git -C lindenis-v536-prebuilt sparse-checkout set gcc/linux-x86/arm/toolchain-sunxi-musl/toolchain
           sudo mkdir -p ${SUNXI_TOOLCHAIN}
           sudo cp -r lindenis-v536-prebuilt/gcc/linux-x86/arm/toolchain-sunxi-musl/toolchain ${SUNXI_TOOLCHAIN}/
       - name: Build
         run: bash -ex scripts/compile.sh
       - name: Pack
-        run: sudo bash -ex scripts/pack_fw.all.sh
+        run: sudo -E bash -ex scripts/pack_fw.all.sh
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: build
-          path: out/**/*.tgz
+          name: firmware
+          path: out/all/*.tgz

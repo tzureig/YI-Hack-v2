@@ -64,6 +64,11 @@ APP.configurations = (function($) {
             alert("Ping host not valid!");
             return;
         }
+        if (configs["AUTO_UPDATE_REPO"] && !/^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/.test(configs["AUTO_UPDATE_REPO"])) {
+            saveStatusElem.text("Failed");
+            alert("Release repository must look like owner/name!");
+            return;
+        }
         if (configs["WD_NET_REBOOT_MIN"] !== undefined && !/^[0-9]+$/.test(configs["WD_NET_REBOOT_MIN"])) {
             saveStatusElem.text("Failed");
             alert("Reboot delay must be a number of minutes (0 = never)!");

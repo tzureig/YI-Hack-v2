@@ -93,6 +93,37 @@ for ROW in $ROWS; do
         exit
     fi
 
+    # "********" is what get_configs.sh sends for a stored password: keep it
+    case "$KEY" in
+        *PASSWORD)
+            if [ "$VALUE" == "********" ]; then
+                continue
+            fi
+            ;;
+    esac
+
+    if [ "$KEY" == "SSH_PASSWORD" ] ; then
+        # Store only a SHA-512 crypt hash, never the password itself
+        if [ -z "$VALUE" ]; then
+            HASH=""
+        else
+            HASH=$(printf "%s\n" "$VALUE" | mkpasswd -m sha512 -s)
+        fi
+        sed -i "s/^SSH_PASSWORD=.*$/SSH_PASSWORD=/" $CONF_FILE
+        if grep -q "^SSH_PASSWORD_HASH=" $CONF_FILE; then
+            sed -i "s|^SSH_PASSWORD_HASH=.*$|SSH_PASSWORD_HASH=${HASH}|" $CONF_FILE
+        else
+            echo "SSH_PASSWORD_HASH=${HASH}" >> $CONF_FILE
+        fi
+        # Apply now (no reboot needed)
+        if [ -n "$HASH" ]; then
+            sed -i "s|^root:[^:]*:|root:${HASH}:|" /etc/shadow
+        else
+            sed -i "s|^root:[^:]*:|root::|" /etc/shadow
+        fi
+        continue
+    fi
+
     if [ "$KEY" == "HOSTNAME" ] ; then
         if [ -z $VALUE ] ; then
 

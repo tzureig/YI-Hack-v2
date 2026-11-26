@@ -1,0 +1,53 @@
+name: Upstream sync
+
+# Once a week: merge the latest changes of roleoroleo/yi-hack-Allwinner-v2
+# into a branch and open a pull request. Merge it and push a tag to release.
+on:
+  schedule:
+    - cron: '17 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Merge upstream
+        id: merge
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/roleoroleo/yi-hack-Allwinner-v2
+          git fetch upstream master
+          git checkout -B upstream-sync
+          if git merge --no-edit --allow-unrelated-histories upstream/master; then
+            echo "conflict=no" >> "$GITHUB_OUTPUT"
+          else
+            git merge --abort
+            echo "conflict=yes" >> "$GITHUB_OUTPUT"
+          fi
+          if [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ]; then
+            echo "changed=no" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=yes" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Push branch and open PR
+        if: steps.merge.outputs.conflict == 'no' && steps.merge.outputs.changed == 'yes'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git push -f origin upstream-sync
+          gh pr view upstream-sync >/dev/null 2>&1 || \
+            gh pr create --base main --head upstream-sync \
+              --title "Upstream: new changes from yi-hack-Allwinner-v2" \
+              --body "Automatic merge of roleoroleo/yi-hack-Allwinner-v2 master. Check the build, merge, then push a tag to release it to the cameras."
+      - name: Conflict
+        if: steps.merge.outputs.conflict == 'yes'
+        run: |
+          echo "::warning::Upstream changes conflict with this repository, merge them by hand."

@@ -96,7 +96,7 @@ VER=$(cat VERSION)
 # Append git short hash when building outside a tagged release,
 # so local builds are distinguishable from official releases.
 GIT_TAG=$(git -C "$BASE_DIR" tag --points-at HEAD 2>/dev/null | grep -Fx "$VER" | head -1)
-if [ -z "$GIT_TAG" ]; then
+if [ -z "$GIT_TAG" ] && [ "$YI_RELEASE" != "1" ]; then
     GIT_HASH=$(git -C "$BASE_DIR" rev-parse --short HEAD 2>/dev/null || echo "custom")
     VER="${VER}-${GIT_HASH}"
 fi

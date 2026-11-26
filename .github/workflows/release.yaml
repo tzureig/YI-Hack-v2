@@ -1,0 +1,71 @@
+name: Release
+
+# Push a tag (e.g. "git tag 1.0.1 && git push origin 1.0.1") or start it by
+# hand with a version: all camera packages are built and published as a
+# GitHub release with SHA256SUMS.txt. The cameras install it automatically
+# during the night (AUTO_UPDATE=yes).
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version / tag to create (e.g. 1.0.1)'
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  SUNXI_TOOLCHAIN: /opt/yi/toolchain-sunxi-musl
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Version
+        id: ver
+        run: |
+          V="${{ github.event.inputs.version }}"
+          [ -z "$V" ] && V="${GITHUB_REF_NAME}"
+          case "$V" in *[!A-Za-z0-9._+-]*|'') echo "Invalid version '$V'"; exit 1 ;; esac
+          echo "$V" > VERSION
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git unzip build-essential \
+            bison bisonc++ libbison-dev autoconf autotools-dev libtool libtool-bin \
+            automake libssl-dev zlib1g-dev libzzip-dev flex libfl-dev cmake \
+            yui-compressor closure-compiler optipng jpegoptim node-less \
+            sassc sass-spec libhtml-tidy-perl libxml2-utils rsync qemu-user pkg-config wget bzip2 file
+          command -v qemu-arm-static || sudo ln -s "$(command -v qemu-arm)" /usr/local/bin/qemu-arm-static
+      - name: Download toolchain
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/lindenis-org/lindenis-v536-prebuilt
+          git -C lindenis-v536-prebuilt sparse-checkout set gcc/linux-x86/arm/toolchain-sunxi-musl/toolchain
+          sudo mkdir -p ${SUNXI_TOOLCHAIN}
+          sudo cp -r lindenis-v536-prebuilt/gcc/linux-x86/arm/toolchain-sunxi-musl/toolchain ${SUNXI_TOOLCHAIN}/
+      - name: Build
+        run: bash -ex scripts/compile.sh
+      - name: Pack
+        run: sudo -E YI_RELEASE=1 bash -ex scripts/pack_fw.all.sh
+      - name: Checksums
+        run: |
+          cd out/all
+          ls *.tgz
+          sha256sum *.tgz > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.version }}
+          name: ${{ steps.ver.outputs.version }}
+          body_path: RELEASE_NOTES.md
+          files: |
+            out/all/*.tgz
+            out/all/SHA256SUMS.txt

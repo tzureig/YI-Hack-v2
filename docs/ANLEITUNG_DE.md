@@ -1,6 +1,6 @@
-# yi-hack-Allwinner-v2 „plus“ – Anleitung
+# YI-Hack-Tiz – Anleitung
 
-Diese Version basiert auf dem aktuellen Stand von yi-hack-Allwinner-v2 (0.3.7 plus alle Verbesserungen seit dem Release) und bringt zusätzlich mehr Zuverlässigkeit und einige neue Funktionen mit.
+YI-Hack-Tiz basiert auf dem aktuellen Stand von yi-hack-Allwinner-v2 und bringt zusätzlich mehr Zuverlässigkeit, automatische Updates, bessere Sicherheit und fertige Anleitungen für Home Assistant, Frigate und UniFi Protect mit. Die Pakete gibt es unter [Releases](https://github.com/tzureig/YI-Hack-Tiz/releases).
 
 ## 1. Das richtige Paket wählen
 
@@ -46,13 +46,13 @@ Jedes Kameramodell braucht **sein eigenes Paket**. Maßgeblich sind die ersten 4
 
 Variante A – am einfachsten, Einstellungen bleiben erhalten:
 1. Zur Sicherheit unter *Maintenance* → *Save Config* eine Sicherung herunterladen.
-2. Das passende Paket **ohne es zu entpacken** in `MODELL_x.x.x.tgz` umbenennen, also z. B. `y21ga_0.3.7-plus-abc1234.tgz` → `y21ga_x.x.x.tgz`.
+2. Das passende Paket **ohne es zu entpacken** in `MODELL_x.x.x.tgz` umbenennen, also z. B. `y21ga_1.0.0.tgz` → `y21ga_x.x.x.tgz`.
 3. Die Datei ins Hauptverzeichnis der SD-Karte legen (Karte kurz in den PC stecken oder per FTP/SCP nach `/tmp/sd/`).
 4. *Maintenance* öffnen – dort steht „Available: local SD“ – und **Upgrade Firmware** klicken. Die Kamera installiert und startet neu.
 
 Variante B: Karte entnehmen, Ordner `yi-hack` sichern, Paket wie bei der Erstinstallation aufspielen, Kamera starten, danach unter *Maintenance* → *Load Config* die Sicherung wieder einspielen.
 
-Hinweis: Der Knopf „Upgrade Firmware“ in der Weboberfläche lädt das **offizielle** Release herunter und ersetzt damit diese Version (die Einstellungen bleiben erhalten).
+Variante C – automatisch: Ist YI-Hack-Tiz einmal installiert, sucht die Kamera **jeden Mittag** nach einer neuen Version und installiert sie **nachts** (ab Werk um 03:xx Uhr). Das Paket wird per SHA-256 geprüft, die Einstellungen bleiben erhalten. Einstellbar unter *Configuration → Firmware update*. Der Knopf „Upgrade Firmware“ unter *Maintenance* holt ebenfalls die neueste Version aus diesem Repository.
 
 ## 4. Was ist neu?
 
@@ -64,6 +64,25 @@ Hinweis: Der Knopf „Upgrade Firmware“ in der Weboberfläche lädt das **offi
 * **WLAN-Energiesparmodus standardmäßig aus** → stabilere Verbindung, niedrigere Latenz.
 * **Geplanter Neustart** täglich oder wöchentlich zur gewünschten Uhrzeit.
 * Grund des letzten Watchdog-Neustarts wird gespeichert und auf der Statusseite angezeigt.
+
+### Automatische Updates
+* Täglicher Check, Installation nachts, SHA-256-geprüft, falsches Modell wird abgelehnt.
+* Status auf der Statusseite, Protokoll unter *Maintenance → Logs → Firmware update*.
+
+### Sicherheit
+* SSH-Passwort nur noch als SHA-512-Hash gespeichert (alte Klartext-Passwörter werden automatisch umgewandelt), Weboberfläche prüft gegen einen SHA-512-Hash.
+* Gespeicherte Passwörter werden nie an den Browser geschickt (Anzeige `********`) und in Logs ausgeblendet.
+* Telnet und FTP-Server ab Werk aus, SSH ohne Passwort gesperrt.
+* Details: [SICHERHEIT.md](SICHERHEIT.md).
+
+### Snapshots
+* Nur noch ein Bild-Decoder gleichzeitig, kurzer Cache (2 s, `SNAPSHOT_CACHE`) und Ersatzbild – keine Abstürze mehr, wenn Home Assistant, Frigate und UniFi gleichzeitig Bilder abholen.
+
+### Kompatibilität
+* Haupt- und Substream (RTSP + ONVIF) ab Werk gleichzeitig an, Ton (AAC) an.
+* Home Assistant MQTT-Discovery ab Werk aktiv (sobald MQTT eingerichtet ist).
+* ONVIF-Erkennung schaltet bei Kabelbetrieb automatisch auf `eth0`.
+* Anleitungen: [HOME_ASSISTANT.md](HOME_ASSISTANT.md), [FRIGATE.md](FRIGATE.md), [UNIFI_PROTECT.md](UNIFI_PROTECT.md), [FESTE_IP.md](FESTE_IP.md).
 
 ### Neue Funktionen in der Weboberfläche
 * *Configuration* → neuer Abschnitt **„Watchdog & Reachability“** mit allen Optionen.
@@ -81,4 +100,5 @@ Hinweis: Der Knopf „Upgrade Firmware“ in der Weboberfläche lädt das **offi
 * *Configuration → Authentication*: Benutzername und Passwort setzen.
 * *Configuration → Watchdog & Reachability*: alles an lassen; „Scheduled reboot“ auf *Every day* / 04:00, wenn die Kamera nach einigen Tagen träge wird.
 * *Swap File* an lassen (die Kameras haben sehr wenig RAM).
-* Telnet abschalten, wenn SSH genutzt wird.
+* SSH-Passwort setzen (sonst ist SSH nur mit Schlüssel möglich).
+* Feste IP vergeben: [FESTE_IP.md](FESTE_IP.md).

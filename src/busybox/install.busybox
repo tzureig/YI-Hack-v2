@@ -59,6 +59,8 @@ echo "#!/tmp/sd/yi-hack/bin/busybox" > ../../build/yi-hack/usr/bin/xargs
 chmod 0755 ../../build/yi-hack/usr/bin/xargs
 echo "#!/tmp/sd/yi-hack/bin/busybox" > ../../build/yi-hack/usr/bin/wget
 chmod 0755 ../../build/yi-hack/usr/bin/wget
+echo "#!/tmp/sd/yi-hack/bin/busybox" > ../../build/yi-hack/usr/bin/sha256sum
+chmod 0755 ../../build/yi-hack/usr/bin/sha256sum
 echo "#!/tmp/sd/yi-hack/bin/busybox" > ../../build/yi-hack/usr/sbin/crond
 chmod 0755 ../../build/yi-hack/usr/sbin/crond
 echo "#!/tmp/sd/yi-hack/bin/busybox" > ../../build/yi-hack/usr/sbin/httpd

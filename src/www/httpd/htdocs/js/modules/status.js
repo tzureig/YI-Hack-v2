@@ -54,6 +54,12 @@ APP.status = (function($) {
                 if (data.temperature)
                     $('#tr_temperature').show();
                 $('#wlan_dbm_text').text(data.wlan_dbm ? "(" + data.wlan_dbm + " dBm)" : "");
+                // update_status: state|installed|available|time
+                var u = (data.update_status || "").split("|");
+                var ut = {"uptodate": "Up to date", "available": "New version " + u[2] + " available (installed at night)",
+                          "installing": "Installing " + u[2], "error": "Last check failed"};
+                $('#update_text').text(u[0] ? (ut[u[0]] || u[0]) + (u[3] ? " - checked " + u[3] : "") : "Not checked yet");
+                $('#auth-warning').toggle(data.auth_set == "no");
                 if (!data.wd_last_event)
                     $('#wd_last_event').text("-");
                 $('.svc-state').each(function() {

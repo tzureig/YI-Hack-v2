@@ -7,6 +7,11 @@
             <p>Here you can see some info and stats about your camera.</p>
         </div>
 
+        <div class="row" id="auth-warning" style="display: none; border: 2px solid #d9534f; padding: 10px; margin-bottom: 15px;">
+            <strong>Security warning:</strong> no username/password is set. Anyone in your network can open this page, the RTSP stream and ONVIF.
+            <a href="?page=configurations">Set them in Configuration &gt; Authentication</a> (also required by UniFi Protect).
+        </div>
+
         <h5 class="tiny-margin strong">Links</h5>
         <hr class="no-margin"/>
 
@@ -145,6 +150,7 @@
             <tr><td>FTP</td><td id="svc_ftp" class="svc-state"></td></tr>
             <tr><td>MQTT</td><td id="svc_mqtt" class="svc-state"></td></tr>
             <tr><td>Watchdog</td><td id="svc_wd" class="svc-state"></td></tr>
+            <tr><td>Firmware update</td><td id="update_text"></td></tr>
             <tr><td>Last watchdog reboot</td><td id="wd_last_reboot"></td></tr>
             <tr><td>Last watchdog event</td><td id="wd_last_event"></td></tr>
             </tbody>

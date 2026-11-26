@@ -108,6 +108,11 @@ init_config()
 
     if [[ $(get_config ONVIF_NETIF) == "wlan0" ]] ; then
         ONVIF_NETIF="wlan0"
+        # Camera connected by cable and Wi-Fi down: announce ONVIF on eth0
+        if [ "$(cat /sys/class/net/eth0/carrier 2>/dev/null)" == "1" ] && \
+           [ "$(cat /sys/class/net/wlan0/carrier 2>/dev/null)" != "1" ]; then
+            ONVIF_NETIF="eth0"
+        fi
     else
         ONVIF_NETIF="eth0"
     fi
@@ -202,6 +207,7 @@ start_rtsp()
         if [ ! -z $USERNAME ]; then
             echo "  username: \"$USERNAME\"" >> /tmp/go2rtc.yaml
             echo "  password: \"$PASSWORD\"" >> /tmp/go2rtc.yaml
+            chmod 0600 /tmp/go2rtc.yaml
         fi
 
         GOMEMLIMIT=4MiB $RTSP_DAEMON -c /tmp/go2rtc.yaml -d
@@ -428,7 +434,9 @@ start_sshd()
         mv /tmp/dropbear_ecdsa_host_key $YI_HACK_PREFIX/etc/dropbear/
     fi
     chmod 0600 $YI_HACK_PREFIX/etc/dropbear/*
-    dropbear -R -B -p 0.0.0.0:22
+    # No blank password logins: set an SSH password or put a key in
+    # /tmp/sd/yi-hack/.ssh/authorized_keys
+    dropbear -R -p 0.0.0.0:22
 }
 
 stop_wsdd()

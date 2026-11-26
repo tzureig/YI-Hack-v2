@@ -22,6 +22,9 @@ case "$NAME" in
     wd)
         show /tmp/wd.log
         ;;
+    update)
+        show /tmp/sd/yi-hack/etc/auto_update.log
+        ;;
     wifi)
         show /tmp/sd/hack_wififailsafe.log
         ;;
@@ -36,7 +39,8 @@ case "$NAME" in
         dmesg 2>/dev/null | $TAIL -n 200
         ;;
     processes)
-        ps
+        # Hide passwords given on command lines (rtsp server, mqtt, ...)
+        ps | sed -E 's/(-w|-P|--password|password=) *[^ ]+/\1 ********/g'
         echo ""
         free
         echo ""

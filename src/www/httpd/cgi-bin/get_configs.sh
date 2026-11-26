@@ -49,7 +49,12 @@ if [ "$CONF_TYPE" == "proxychains" ] ; then
     PROXYCHAINS_SERVERS=${PROXYCHAINS_SERVERS%?}
     echo -e \"PROXYCHAINS_SERVERS\":\"$PROXYCHAINS_SERVERS\",
 else
-    sed '/^#/d; /^$/d; s/\\/\\\\/g; s/\"/\\"/g; s/\([^=]*\)=\(.*\)/"\1":"\2",/' "$CONF_FILE"
+    # Secrets never leave the camera: a set password is sent as "********"
+    # (set_configs.sh keeps the stored value when it gets it back), hashes are not sent at all
+    sed '/^#/d; /^$/d; /^[A-Z_]*_HASH=/d; s/^\([A-Z_]*PASSWORD\)=..*$/\1=********/; s/\\/\\\\/g; s/\"/\\"/g; s/\([^=]*\)=\(.*\)/"\1":"\2",/' "$CONF_FILE"
+    if [ "$CONF_TYPE" == "system" ] && [ -n "$(grep '^SSH_PASSWORD_HASH=..' "$CONF_FILE")" ]; then
+        printf "\"%s\":\"%s\",\n" "SSH_PASSWORD" "********"
+    fi
 fi
 
 if [ "$CONF_TYPE" == "system" ] ; then

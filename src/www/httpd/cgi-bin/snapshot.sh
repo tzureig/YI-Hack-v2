@@ -57,11 +57,70 @@ elif [ "$WATERMARK" == "no" ] ; then
     WATERMARK=""
 fi
 
+# Several clients (Home Assistant, Frigate, UniFi, browsers) polling at the
+# same time used to start one imggrabber each: decoding H.264 several times in
+# parallel exhausts the RAM of the camera. Now only one imggrabber runs at a
+# time and a fresh picture (younger than SNAPSHOT_CACHE seconds) is shared.
+CACHE_AGE=$(grep -w ^SNAPSHOT_CACHE $YI_HACK_PREFIX/etc/system.conf | cut -d= -f2)
+case "$CACHE_AGE" in ''|*[!0-9]*) CACHE_AGE=2 ;; esac
+RES_NAME=${RES#-r }
+CACHE=/tmp/snapshot_${RES_NAME}${WATERMARK:+_wm}.jpg
+LOCK=/tmp/snapshot.lock
+FALLBACK=$YI_HACK_PREFIX/etc/fallback.jpg
+
+cache_fresh()
+{
+    [ -s $CACHE ] && [ -f $CACHE.ts ] || return 1
+    read -r TS < $CACHE.ts
+    NOW=$(date +%s)
+    [ $((NOW - TS)) -le $CACHE_AGE ]
+}
+
+get_snapshot()
+{
+    if [ -f /tmp/snapshot.disabled ]; then
+        SNAP=$FALLBACK
+        return
+    fi
+    if cache_fresh; then
+        SNAP=$CACHE
+        return
+    fi
+    # Remove a lock left by a killed request
+    if [ -d $LOCK ] && [ -n "$(find $LOCK -maxdepth 0 -mmin +1 2>/dev/null)" ]; then
+        rmdir $LOCK 2>/dev/null
+    fi
+    if mkdir $LOCK 2>/dev/null; then
+        imggrabber -m $MODEL $RES $WATERMARK > $CACHE.tmp 2>/dev/null
+        if [ -s $CACHE.tmp ]; then
+            mv -f $CACHE.tmp $CACHE
+            date +%s > $CACHE.ts
+        else
+            rm -f $CACHE.tmp
+        fi
+        rmdir $LOCK
+    else
+        # Another request is grabbing: wait for it (max ~6 s)
+        N=0
+        while [ -d $LOCK ] && [ $N -lt 30 ]; do
+            sleep 0.2
+            N=$((N+1))
+        done
+    fi
+    if [ -s $CACHE ]; then
+        SNAP=$CACHE
+    else
+        SNAP=$FALLBACK
+    fi
+}
+
+get_snapshot
+
 if [ "$REDIRECT" == "yes" ] ; then
     if [ "$BASE64" == "no" ] ; then
-        imggrabber -m $MODEL $RES $WATERMARK > /tmp/sd/record/$OUTPUT_FILE
+        cat $SNAP > /tmp/sd/record/$OUTPUT_FILE
     elif [ "$BASE64" == "yes" ] ; then
-        imggrabber -m $MODEL $RES $WATERMARK | base64 > /tmp/sd/record/$OUTPUT_FILE
+        base64 $SNAP > /tmp/sd/record/$OUTPUT_FILE
     fi
     printf "Content-type: application/json\r\n\r\n"
     printf "{\n"
@@ -69,10 +128,12 @@ if [ "$REDIRECT" == "yes" ] ; then
     printf "}"
 else
     if [ "$BASE64" == "no" ] ; then
-        printf "Content-type: image/jpeg\r\n\r\n"
-        imggrabber -m $MODEL $RES $WATERMARK
+        printf "Content-type: image/jpeg\r\n"
+        printf "Cache-Control: no-store\r\n\r\n"
+        cat $SNAP
     elif [ "$BASE64" == "yes" ] ; then
-        printf "Content-type: image/jpeg;base64\r\n\r\n"
-        imggrabber -m $MODEL $RES $WATERMARK | base64
+        printf "Content-type: image/jpeg;base64\r\n"
+        printf "Cache-Control: no-store\r\n\r\n"
+        base64 $SNAP
     fi
 fi

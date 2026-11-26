@@ -565,7 +565,7 @@
                         <td>
                             <input class="u-full-width" type="password" placeholder="" data-key="PASSWORD" id="PASSWORD"/>
                             <span class="switch-description">
-                                Password to access RTSP, ONVIF and HTTP (default empty).
+                                Password to access RTSP, ONVIF and HTTP (default empty). Strongly recommended, required by UniFi Protect. The web server uses a SHA-512 hash; RTSP/ONVIF digest authentication needs the password itself, so it stays on the SD card but is never sent to the browser.
                                 <br/>
                                 Allowed special chars: \ | ! &quot; $ % &amp; / ( ) &apos; ? ^ [ ] @ &lt; &gt; , ; . : - _ *
                             </span>
@@ -576,7 +576,7 @@
                         <td>
                             <input class="u-full-width" type="password" placeholder="" data-key="SSH_PASSWORD" id="SSH_PASSWORD"/>
                             <span class="switch-description">
-                                Password for SSH, Telnet and FTP root user (default empty).
+                                Password for SSH, Telnet and FTP root user (default empty). Stored only as a salted SHA-512 hash and applied immediately. Without it SSH accepts only keys (/tmp/sd/yi-hack/.ssh/authorized_keys).
                                 <br/>
                                 Allowed special chars: \ | ! &quot; $ % &amp; / ( ) &apos; ? ^ [ ] @ &lt; &gt; , ; . : - _ *
                             </span>
@@ -711,6 +711,76 @@
                             </div>
                             <span class="switch-description">
                                 Hour of the scheduled reboot (camera time zone).
+                            </span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <h4 class="no-margin">Firmware update</h4>
+        <hr class="tiny-margin"/>
+        <div class="row">
+            <div class="twelve columns configs-switch">
+                <table class="u-full-width padded-table config-table">
+                    <tbody>
+                    <tr class="row">
+                        <td>Automatic update</td>
+                        <td>
+                            <div class="standard-select">
+                                <select data-key="AUTO_UPDATE" id="AUTO_UPDATE">
+                                    <option value="yes">Check daily, install at night</option>
+                                    <option value="check">Check daily, install manually</option>
+                                    <option value="no">Off</option>
+                                </select>
+                            </div>
+                            <span class="switch-description">
+                                The camera looks for a new release once a day (around noon). A new firmware is installed during the night: the package is verified with its SHA-256 checksum, the configuration is kept and the camera reboots.
+                            </span>
+                        </td>
+                    </tr>
+                    <tr class="row">
+                        <td>Install time</td>
+                        <td>
+                            <div class="standard-select">
+                                <select data-key="AUTO_UPDATE_HOUR" id="AUTO_UPDATE_HOUR">
+                                    <option value="0">00:00</option>
+                                    <option value="1">01:00</option>
+                                    <option value="2">02:00</option>
+                                    <option value="3">03:00</option>
+                                    <option value="4">04:00</option>
+                                    <option value="5">05:00</option>
+                                    <option value="6">06:00</option>
+                                    <option value="7">07:00</option>
+                                    <option value="8">08:00</option>
+                                    <option value="9">09:00</option>
+                                    <option value="10">10:00</option>
+                                    <option value="11">11:00</option>
+                                    <option value="12">12:00</option>
+                                    <option value="13">13:00</option>
+                                    <option value="14">14:00</option>
+                                    <option value="15">15:00</option>
+                                    <option value="16">16:00</option>
+                                    <option value="17">17:00</option>
+                                    <option value="18">18:00</option>
+                                    <option value="19">19:00</option>
+                                    <option value="20">20:00</option>
+                                    <option value="21">21:00</option>
+                                    <option value="22">22:00</option>
+                                    <option value="23">23:00</option>
+                                </select>
+                            </div>
+                            <span class="switch-description">
+                                Hour of the night installation (camera time zone).
+                            </span>
+                        </td>
+                    </tr>
+                    <tr class="row">
+                        <td>Release repository</td>
+                        <td>
+                            <input class="u-full-width" type="text" placeholder="tzureig/YI-Hack-Tiz" data-key="AUTO_UPDATE_REPO" id="AUTO_UPDATE_REPO"/>
+                            <span class="switch-description">
+                                GitHub repository (owner/name) the firmware releases come from. Also used by "Upgrade Firmware" in Maintenance.
                             </span>
                         </td>
                     </tr>

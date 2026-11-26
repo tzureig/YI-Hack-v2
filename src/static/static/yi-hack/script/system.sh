@@ -184,25 +184,35 @@ if [[ x$(get_config USERNAME) != "x" ]] ; then
     PASSWORD=$(get_config PASSWORD)
     RTSP_USERPWD=$USERNAME:$PASSWORD@
     ONVIF_USERPWD="user=$USERNAME\npassword=$PASSWORD"
+    # The web server only gets a salted SHA-512 hash of the password
+    PASSWORD_HASH="$(printf "%s\n" "${PASSWORD}" | mkpasswd -m sha512 -s)"
     echo "/onvif::" > /tmp/httpd.conf
-    echo "/:$USERNAME:$PASSWORD" >> /tmp/httpd.conf
+    echo "/:$USERNAME:$PASSWORD_HASH" >> /tmp/httpd.conf
     chmod 0600 /tmp/httpd.conf
 fi
 
-if [[ x$(get_config SSH_PASSWORD) != "x" ]] ; then
-    log "Setting SSH password"
-    SSH_PASSWORD=$(get_config SSH_PASSWORD)
-    PASSWORD_MD5="$(echo "${SSH_PASSWORD}" | mkpasswd --method=MD5 --stdin)"
-    sed -i 's|^root::|root:x:|g' /etc/passwd
-    sed -i 's|:/root:|:/tmp/sd/yi-hack:|g' /etc/passwd
-    sed -i 's|^root::|root:'${PASSWORD_MD5}':|g' /etc/shadow
-    chmod 0600 /etc/passwd
-    chmod 0600 /etc/shadow
-else
-    sed -i 's|:/root:|:/tmp/sd/yi-hack:|g' /etc/passwd
-    chmod 0600 /etc/passwd
-    chmod 0600 /etc/shadow
+# SSH: only a SHA-512 hash is stored. Migrate an old plaintext password.
+SSH_PASSWORD=$(get_config SSH_PASSWORD)
+if [ ! -z "$SSH_PASSWORD" ]; then
+    log "Converting the SSH password to a hash"
+    SSH_HASH="$(printf "%s\n" "${SSH_PASSWORD}" | mkpasswd -m sha512 -s)"
+    sed -i "s/^SSH_PASSWORD=.*$/SSH_PASSWORD=/" $YI_HACK_PREFIX/$CONF_FILE
+    if grep -q "^SSH_PASSWORD_HASH=" $YI_HACK_PREFIX/$CONF_FILE; then
+        sed -i "s|^SSH_PASSWORD_HASH=.*$|SSH_PASSWORD_HASH=${SSH_HASH}|" $YI_HACK_PREFIX/$CONF_FILE
+    else
+        echo "SSH_PASSWORD_HASH=${SSH_HASH}" >> $YI_HACK_PREFIX/$CONF_FILE
+    fi
 fi
+unset SSH_PASSWORD
+SSH_HASH=$(get_config SSH_PASSWORD_HASH)
+sed -i 's|:/root:|:/tmp/sd/yi-hack:|g' /etc/passwd
+if [ ! -z "$SSH_HASH" ]; then
+    log "Setting SSH password"
+    sed -i 's|^root::|root:x:|g' /etc/passwd
+    sed -i "s|^root:[^:]*:|root:${SSH_HASH}:|" /etc/shadow
+fi
+chmod 0600 /etc/passwd
+chmod 0600 /etc/shadow
 
 case $(get_config RTSP_PORT) in
     ''|*[!0-9]*) RTSP_PORT=554 ;;
@@ -493,10 +503,27 @@ if [ "$REBOOT_SCHEDULE" == "daily" ]; then
 elif [ "$REBOOT_SCHEDULE" == "weekly" ]; then
     echo "0 $REBOOT_HOUR * * 0 sync; /sbin/reboot" >> /var/spool/cron/crontabs/root
 fi
+# Automatic firmware update: check once a day at noon, install at night.
+# The minute depends on the MAC address so that several cameras do not
+# query github at the same time.
+AUTO_UPDATE=$(get_config AUTO_UPDATE)
+if [ "$AUTO_UPDATE" == "yes" ] || [ "$AUTO_UPDATE" == "check" ]; then
+    AU_HOUR=$(get_config AUTO_UPDATE_HOUR)
+    case "$AU_HOUR" in ''|*[!0-9]*) AU_HOUR=3 ;; esac
+    [ $AU_HOUR -gt 23 ] && AU_HOUR=3
+    MAC_LAST=$(cat /sys/class/net/wlan0/address 2>/dev/null | cut -d: -f6)
+    [ -z "$MAC_LAST" ] && MAC_LAST=$(cat /sys/class/net/eth0/address 2>/dev/null | cut -d: -f6)
+    AU_MIN=$(( $(printf "%d" 0x${MAC_LAST:-1e}) % 50 + 5 ))
+    echo "$AU_MIN 12 * * * /tmp/sd/yi-hack/script/auto_update.sh check" >> /var/spool/cron/crontabs/root
+    if [ "$AUTO_UPDATE" == "yes" ]; then
+        # Not in the same minute as the scheduled reboot
+        echo "$AU_MIN $AU_HOUR * * * /tmp/sd/yi-hack/script/auto_update.sh install" >> /var/spool/cron/crontabs/root
+    fi
+fi
 $YI_HACK_PREFIX/usr/sbin/crond -c /var/spool/cron/crontabs/
 
-# Add MQTT Advertise
-if [ -f "$YI_HACK_PREFIX/script/mqtt_advertise/startup.sh" ]; then
+# Add MQTT Advertise (Home Assistant discovery, telemetry): only with a broker
+if [[ $(get_config MQTT) == "yes" ]] && [ -f "$YI_HACK_PREFIX/script/mqtt_advertise/startup.sh" ]; then
     $YI_HACK_PREFIX/script/mqtt_advertise/startup.sh
 fi
 

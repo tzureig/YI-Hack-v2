@@ -77,6 +77,12 @@ SVC_MQTT=$(svc "mqttv4")
 SVC_WD=$(svc "wd.sh")
 WD_LAST_REBOOT=$(cat /tmp/sd/yi-hack/etc/wd_last_reboot 2>/dev/null | head -n1 | tr -d '"\\')
 [ -z "$WD_LAST_REBOOT" ] && WD_LAST_REBOOT="none"
+if grep -q "^USERNAME=." /tmp/sd/yi-hack/etc/system.conf && grep -q "^PASSWORD=." /tmp/sd/yi-hack/etc/system.conf; then
+    AUTH_SET="yes"
+else
+    AUTH_SET="no"
+fi
+UPDATE_STATUS=$(cat /tmp/sd/yi-hack/etc/auto_update.status 2>/dev/null | tr -d '"\\')
 WD_LAST_EVENT=$(tail -n1 /tmp/wd.log 2>/dev/null | tr -d '"\\')
 
 # Yeah, it's pretty ugly.. but hey, it works.
@@ -117,6 +123,8 @@ printf "\"%s\":\"%s\",\n" "svc_ftp"         "$SVC_FTP"
 printf "\"%s\":\"%s\",\n" "svc_mqtt"        "$SVC_MQTT"
 printf "\"%s\":\"%s\",\n" "svc_wd"          "$SVC_WD"
 printf "\"%s\":\"%s\",\n" "wd_last_reboot"  "$WD_LAST_REBOOT"
-printf "\"%s\":\"%s\"\n"  "wd_last_event"   "$WD_LAST_EVENT"
+printf "\"%s\":\"%s\",\n" "wd_last_event"   "$WD_LAST_EVENT"
+printf "\"%s\":\"%s\",\n" "auth_set"        "$AUTH_SET"
+printf "\"%s\":\"%s\"\n"  "update_status"   "$UPDATE_STATUS"
 
 printf "}"
