@@ -2,6 +2,9 @@
 #
 # Stage 1 (runs on the build machine): export YOLOv8n to ONNX
 FROM --platform=$BUILDPLATFORM python:3.12-slim AS model
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 libxcb1 \
+ && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
  && pip install --no-cache-dir ultralytics onnx
 WORKDIR /model
