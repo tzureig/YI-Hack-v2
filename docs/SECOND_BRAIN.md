@@ -83,7 +83,7 @@ repo: https://github.com/tzureig/YI-Hack-v2
 * **Erkennung:** `http://SERVER:8090/` (alle Kameras mit Rahmen).
 * **Neues Release:** GitHub → *Actions → Release → Run workflow* → Version (z. B. `1.0.1`). Kameras installieren es in der folgenden Nacht.
 * **Original-Updates übernehmen:** Montags kommt automatisch ein PR „Upstream: …“ → Build grün → mergen → Release.
-* **Update von 1.0.2 bei „No package for this model“:** Release 1.0.3 enthält den Parser-Fix. Falls die alte Firmware das Paket online nicht findet, das Modellpaket aus [Release 1.0.3](https://github.com/tzureig/YI-Hack-v2/releases/tag/1.0.3) laden (z. B. `y211ga_1.0.3.tgz`), in `y211ga_x.x.x.tgz` umbenennen, ins Hauptverzeichnis der SD-Karte legen und unter *Maintenance → Upgrade Firmware* als lokales SD-Update installieren. Die Einstellungen bleiben erhalten.
+* **Update von 1.0.2 bei „No package for this model“:** Der alte 1.0.2-Updater kann 1.0.3 wegen der früheren Manifest-Suche nicht finden; der Fix in 1.0.3 greift erst nach Installation. Release 1.0.3 enthält den Parser-Fix. Falls die alte Firmware das Paket online nicht findet, das Modellpaket aus [Release 1.0.3](https://github.com/tzureig/YI-Hack-v2/releases/tag/1.0.3) laden (z. B. `y211ga_1.0.3.tgz`), in `y211ga_x.x.x.tgz` umbenennen, ins Hauptverzeichnis der SD-Karte legen und unter *Maintenance → Upgrade Firmware* als lokales SD-Update installieren. Die Einstellungen bleiben erhalten.
 * **Kamera hängt?** Logs: *Maintenance → Logs → Watchdog*. Letzter Neustart-Grund steht auf der Statusseite.
 
 ## 6. Konfigurationsschlüssel (neu in YI-Hack-v2)
