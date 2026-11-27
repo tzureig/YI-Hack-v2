@@ -68,7 +68,10 @@ jobs:
           # grep " \*\?PKG$", and the camera's grep reads "\?" literally, so
           # it needs " *?PKG". Newer updaters compare the whole file name field
           # and ignore these lines. The file is signed afterwards as a whole.
+          # The exact reading of "\?" is unknown, so all forms are added.
           sha256sum *.tgz | awk '{ print $1 " *?" $2 }' >> SHA256SUMS.txt
+          sha256sum *.tgz | awk '{ print $1 " *" $2 }' >> SHA256SUMS.txt
+          sha256sum *.tgz | awk '{ print $1 " ?" $2 }' >> SHA256SUMS.txt
           cat SHA256SUMS.txt
       - name: Sign checksums
         env:
