@@ -12,7 +12,7 @@ FTPD=no
 BUSYBOX_FTPD=no
 MDNSD=yes
 DISABLE_CLOUD=no
-REC_WITHOUT_CLOUD=no
+REC_WITHOUT_CLOUD=yes
 MQTT=no
 RTSP=yes
 RTSP_ALT=standard
@@ -55,7 +55,7 @@ USERNAME=
 PASSWORD=
 TIMEZONE=
 EVENTS_TIME=autodetect
-FREE_SPACE=0
+FREE_SPACE=10
 FTP_UPLOAD=no
 FTP_HOST=
 FTP_DIR=
@@ -93,7 +93,7 @@ SWITCH_ON=yes
 SAVE_VIDEO_ON_MOTION=yes
 MOTION_DETECTION=no
 SENSITIVITY=low
-AI_HUMAN_DETECTION=no
+AI_HUMAN_DETECTION=yes
 AI_VEHICLE_DETECTION=no
 AI_ANIMAL_DETECTION=no
 FACE_DETECTION=no
@@ -179,3 +179,16 @@ do
         fi
     fi
 done
+
+# YI-Hack-Tiz: record to the SD card when a person is detected. Applied once
+# to existing installations (marker TIZ_REC_PERSON), later changes in the web
+# interface are kept.
+if ! grep -q "^TIZ_REC_PERSON=done" $SYSTEM_CONF_FILE; then
+    sed -i "s/^REC_WITHOUT_CLOUD=.*/REC_WITHOUT_CLOUD=yes/" $SYSTEM_CONF_FILE
+    if grep -q "^FREE_SPACE=0$" $SYSTEM_CONF_FILE; then
+        # delete the oldest recordings when less than 10 % of the SD is free
+        sed -i "s/^FREE_SPACE=0$/FREE_SPACE=10/" $SYSTEM_CONF_FILE
+    fi
+    sed -i "s/^SWITCH_ON=.*/SWITCH_ON=yes/; s/^SAVE_VIDEO_ON_MOTION=.*/SAVE_VIDEO_ON_MOTION=yes/; s/^MOTION_DETECTION=.*/MOTION_DETECTION=no/; s/^AI_HUMAN_DETECTION=.*/AI_HUMAN_DETECTION=yes/" $CAMERA_CONF_FILE
+    echo "TIZ_REC_PERSON=done" >> $SYSTEM_CONF_FILE
+fi

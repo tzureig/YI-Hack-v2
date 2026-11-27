@@ -296,6 +296,17 @@ else
         fi
         ./cloud &
 
+        # Camera on and recording mode from camera.conf (detect = only on events)
+        if [[ $(get_camera_config SWITCH_ON) != "no" ]] ; then
+            ipc_cmd -t on
+            sleep 0.1
+        fi
+        if [[ $(get_camera_config SAVE_VIDEO_ON_MOTION) == "no" ]] ; then
+            ipc_cmd -v always
+        else
+            ipc_cmd -v detect
+        fi
+        sleep 0.1
         if [ "$HV" == "11" ] || [ "$HV" == "12" ]; then
             ipc_cmd -1
             sleep 0.5
