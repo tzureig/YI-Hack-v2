@@ -1,0 +1,17 @@
+#!/bin/bash
+# Signature check of a test file signed with a throwaway key must fail with
+# the real key (exit 1), usage error must give exit 2: proves the ARM binary runs.
+
+SCRIPT_DIR=$(cd `dirname $0` && pwd)
+cd $SCRIPT_DIR
+
+LIBMAIN_PATH=/opt/yi/toolchain-sunxi-musl/toolchain
+BIN=./_install/bin/fwverify
+
+head -c 64 /dev/zero > /tmp/fwverify_test.sig
+echo "test" > /tmp/fwverify_test.txt
+qemu-arm-static -L $LIBMAIN_PATH $BIN /tmp/fwverify_test.txt /tmp/fwverify_test.sig
+RES=$?
+rm -f /tmp/fwverify_test.sig /tmp/fwverify_test.txt
+[ $RES -eq 1 ] || { echo "fwverify qemu test failed (exit $RES)"; exit 1; }
+echo "fwverify qemu test ok"

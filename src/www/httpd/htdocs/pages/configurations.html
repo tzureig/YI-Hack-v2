@@ -735,7 +735,7 @@
                                 </select>
                             </div>
                             <span class="switch-description">
-                                The camera looks for a new release once a day (around noon). A new firmware is installed during the night: the package is verified with its SHA-256 checksum, the configuration is kept and the camera reboots.
+                                The camera looks for a new release once a day (around noon). A newer firmware is installed during the night: the checksums must carry the release signature (Ed25519) and the package must match its SHA-256 checksum and camera model. The configuration is kept and the camera reboots.
                             </span>
                         </td>
                     </tr>
@@ -772,6 +772,20 @@
                             </div>
                             <span class="switch-description">
                                 Hour of the night installation (camera time zone).
+                            </span>
+                        </td>
+                    </tr>
+                    <tr class="row">
+                        <td>Update channel</td>
+                        <td>
+                            <div class="standard-select">
+                                <select data-key="AUTO_UPDATE_CHANNEL" id="AUTO_UPDATE_CHANNEL">
+                                    <option value="stable">Stable releases</option>
+                                    <option value="beta">Beta (pre-releases, for a test camera)</option>
+                                </select>
+                            </div>
+                            <span class="switch-description">
+                                Use "Beta" on one test camera: it gets new versions first, the other cameras only when the release is marked as stable.
                             </span>
                         </td>
                     </tr>

@@ -10,12 +10,13 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  actions: write
 
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Merge upstream
@@ -46,7 +47,10 @@ jobs:
           gh pr view upstream-sync >/dev/null 2>&1 || \
             gh pr create --base main --head upstream-sync \
               --title "Upstream: new changes from yi-hack-Allwinner-v2" \
-              --body "Automatic merge of roleoroleo/yi-hack-Allwinner-v2 master. Check the build, merge, then push a tag to release it to the cameras."
+              --body "Automatic merge of roleoroleo/yi-hack-Allwinner-v2 master. Check the build, merge, then run Actions → Release to publish it to the cameras."
+          # A pull request opened with GITHUB_TOKEN does not start other
+          # workflows, so start the build of the branch explicitly
+          gh workflow run build.yaml --ref upstream-sync
       - name: Conflict
         if: steps.merge.outputs.conflict == 'yes'
         run: |

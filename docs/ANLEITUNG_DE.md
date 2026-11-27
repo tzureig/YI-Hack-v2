@@ -52,7 +52,7 @@ Variante A – am einfachsten, Einstellungen bleiben erhalten:
 
 Variante B: Karte entnehmen, Ordner `yi-hack` sichern, Paket wie bei der Erstinstallation aufspielen, Kamera starten, danach unter *Maintenance* → *Load Config* die Sicherung wieder einspielen.
 
-Variante C – automatisch: Ist YI-Hack-Tiz einmal installiert, sucht die Kamera **jeden Mittag** nach einer neuen Version und installiert sie **nachts** (ab Werk um 03:xx Uhr). Das Paket wird per SHA-256 geprüft, die Einstellungen bleiben erhalten. Einstellbar unter *Configuration → Firmware update*. Der Knopf „Upgrade Firmware“ unter *Maintenance* holt ebenfalls die neueste Version aus diesem Repository.
+Variante C – automatisch: Ist YI-Hack-Tiz einmal installiert, sucht die Kamera **jeden Mittag** nach einer neuen Version und installiert sie **nachts** (ab Werk um 03:xx Uhr). Installiert werden nur signierte Releases (Ed25519-Signatur + SHA-256) und nur neuere Versionen, die Einstellungen bleiben erhalten. Mit *Update channel → Beta* bekommt eine Testkamera Pre-Releases zuerst. Einstellbar unter *Configuration → Firmware update*. Der Knopf „Upgrade Firmware“ unter *Maintenance* holt ebenfalls die neueste Version aus diesem Repository.
 
 ## 4. Was ist neu?
 
@@ -66,7 +66,8 @@ Variante C – automatisch: Ist YI-Hack-Tiz einmal installiert, sucht die Kamera
 * Grund des letzten Watchdog-Neustarts wird gespeichert und auf der Statusseite angezeigt.
 
 ### Automatische Updates
-* Täglicher Check, Installation nachts, SHA-256-geprüft, falsches Modell wird abgelehnt.
+* Täglicher Check, Installation nachts, Signatur + SHA-256 geprüft, falsches Modell wird abgelehnt, kein Downgrade.
+* `AUTO_UPDATE_CHANNEL=stable|beta`: Beta installiert auch Pre-Releases (für eine Testkamera).
 * Status auf der Statusseite, Protokoll unter *Maintenance → Logs → Firmware update*.
 
 ### Sicherheit

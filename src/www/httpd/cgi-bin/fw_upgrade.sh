@@ -5,12 +5,6 @@ export LD_LIBRARY_PATH=/lib:/usr/lib:/home/lib:/home/qigan/lib:/home/app/localli
 
 YI_HACK_PREFIX="/tmp/sd/yi-hack"
 
-# Releases of this firmware (AUTO_UPDATE_REPO in system.conf)
-UPDATE_REPO=$(grep -w "^AUTO_UPDATE_REPO" $YI_HACK_PREFIX/etc/system.conf | cut -d= -f2)
-case "$UPDATE_REPO" in
-    ''|*[!A-Za-z0-9._/-]*|*/*/*) UPDATE_REPO="tzureig/YI-Hack-Tiz" ;;
-esac
-
 . $YI_HACK_PREFIX/www/cgi-bin/validate.sh
 
 if ! $(validateQueryString $QUERY_STRING); then
@@ -33,7 +27,17 @@ if [ "$VAL" == "info" ] ; then
 
     MODEL_SUFFIX=`cat $YI_HACK_PREFIX/model_suffix`
     FW_VERSION=`cat $YI_HACK_PREFIX/version`
-    LATEST_FW=`/tmp/sd/yi-hack/usr/bin/wget -O -  https://api.github.com/repos/$UPDATE_REPO/releases/latest 2>&1 | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/'`
+    # Same logic as the nightly update (channel, signed releases, only newer versions)
+    $YI_HACK_PREFIX/script/auto_update.sh check > /dev/null 2>&1
+    STATE=$(cut -d'|' -f1 $YI_HACK_PREFIX/etc/auto_update.status 2>/dev/null)
+    LATEST_FW=$(cut -d'|' -f3 $YI_HACK_PREFIX/etc/auto_update.status 2>/dev/null)
+    case "$LATEST_FW" in *[!A-Za-z0-9._+-]*) LATEST_FW="" ;; esac
+    if [ "$STATE" == "available" ]; then
+        NEWER="true"
+    else
+        NEWER="false"
+    fi
+    [ "$STATE" == "error" ] && LATEST_FW="unknown (see auto_update.log)"
     if [ -f /tmp/sd/${MODEL_SUFFIX}_x.x.x.tgz ]; then
         LOCAL_FW="true"
     else
@@ -44,6 +48,7 @@ if [ "$VAL" == "info" ] ; then
     printf "\"%s\":\"%s\",\n" "error" "false"
     printf "\"%s\":\"%s\",\n" "fw_version"      "$FW_VERSION"
     printf "\"%s\":\"%s\",\n" "latest_fw"       "$LATEST_FW"
+    printf "\"%s\":%s,\n" "newer"                 "$NEWER"
     printf "\"%s\":%s\n" "local_fw"             "$LOCAL_FW"
     printf "}"
 
@@ -62,61 +67,44 @@ elif [ "$VAL" == "upgrade" ] ; then
         exit
     fi
 
-    # Clean old upgrades
-    rm -rf /tmp/sd/.fw_upgrade
-    rm -rf /tmp/sd/.fw_upgrade.conf
-    rm -rf /tmp/sd/Factory
-    rm -rf /tmp/sd/newhome
-
-    mkdir -p /tmp/sd/.fw_upgrade
-    mkdir -p /tmp/sd/.fw_upgrade.conf
-    cd /tmp/sd/.fw_upgrade
-
     MODEL_SUFFIX=`cat $YI_HACK_PREFIX/model_suffix`
-    FW_VERSION=`cat $YI_HACK_PREFIX/version`
-    if [ -f /tmp/sd/${MODEL_SUFFIX}_x.x.x.tgz ]; then
-        mv /tmp/sd/${MODEL_SUFFIX}_x.x.x.tgz /tmp/sd/.fw_upgrade/${MODEL_SUFFIX}_x.x.x.tgz
-        LATEST_FW="x.x.x"
+
+    if [ ! -f /tmp/sd/${MODEL_SUFFIX}_x.x.x.tgz ]; then
+        # Online: download, check signature + checksum + model, unpack
+        MSG=$($YI_HACK_PREFIX/script/auto_update.sh prepare 2>&1 | tail -n 1)
+        if [ ! -f /tmp/sd/.fw_upgrade/yi-hack/fw_upgrade_in_progress ]; then
+            printf "Content-type: text/html\r\n\r\n"
+            printf "%s" "${MSG:-Upgrade failed, see auto_update.log}"
+            exit
+        fi
     else
-        LATEST_FW=`/tmp/sd/yi-hack/usr/bin/wget -O -  https://api.github.com/repos/$UPDATE_REPO/releases/latest 2>&1 | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/'`
-        if [ "$FW_VERSION" == "$LATEST_FW" ]; then
+        # Package copied to the SD card by hand (MODEL_x.x.x.tgz)
+        rm -rf /tmp/sd/.fw_upgrade /tmp/sd/.fw_upgrade.conf /tmp/sd/Factory /tmp/sd/newhome
+        mkdir -p /tmp/sd/.fw_upgrade /tmp/sd/.fw_upgrade.conf
+        mv /tmp/sd/${MODEL_SUFFIX}_x.x.x.tgz /tmp/sd/.fw_upgrade/
+        cd /tmp/sd/.fw_upgrade
+        if ! tar zxf ${MODEL_SUFFIX}_x.x.x.tgz || [ "$(cat yi-hack/model_suffix 2>/dev/null)" != "$MODEL_SUFFIX" ]; then
+            cd /tmp/sd
+            rm -rf /tmp/sd/.fw_upgrade /tmp/sd/.fw_upgrade.conf
             printf "Content-type: text/html\r\n\r\n"
-            printf "No new firmware available."
+            printf "The package on the SD card is broken or for another model, upgrade refused."
             exit
         fi
-
-        /tmp/sd/yi-hack/usr/bin/wget https://github.com/$UPDATE_REPO/releases/download/$LATEST_FW/${MODEL_SUFFIX}_${LATEST_FW}.tgz
-        if [ ! -f ${MODEL_SUFFIX}_${LATEST_FW}.tgz ]; then
-            printf "Content-type: text/html\r\n\r\n"
-            printf "Unable to download firmware file."
-            exit
-        fi
-        # Verify the SHA-256 checksum published with the release
-        /tmp/sd/yi-hack/usr/bin/wget -O SHA256SUMS.txt https://github.com/$UPDATE_REPO/releases/download/$LATEST_FW/SHA256SUMS.txt
-        EXPECTED=$(grep " \*\?${MODEL_SUFFIX}_${LATEST_FW}.tgz\$" SHA256SUMS.txt 2>/dev/null | awk '{print $1}' | head -n1)
-        ACTUAL=$(/tmp/sd/yi-hack/usr/bin/sha256sum ${MODEL_SUFFIX}_${LATEST_FW}.tgz | awk '{print $1}')
-        rm -f SHA256SUMS.txt
-        if [ -z "$EXPECTED" ] || [ "$EXPECTED" != "$ACTUAL" ]; then
-            rm -f ${MODEL_SUFFIX}_${LATEST_FW}.tgz
-            printf "Content-type: text/html\r\n\r\n"
-            printf "Checksum of the firmware file is wrong, upgrade refused."
-            exit
-        fi
+        rm -f ${MODEL_SUFFIX}_x.x.x.tgz
+        # Keep the configuration
+        cp -rf $YI_HACK_PREFIX/etc/* /tmp/sd/.fw_upgrade.conf/
+        rm -f /tmp/sd/.fw_upgrade.conf/*.tar.gz
+        mkdir -p /tmp/sd/.fw_upgrade/yi-hack/etc
+        cp -rf /tmp/sd/.fw_upgrade.conf/* /tmp/sd/.fw_upgrade/yi-hack/etc/
+        rm -rf /tmp/sd/.fw_upgrade.conf
+        rm -f /tmp/sd/.fw_upgrade/yi-hack/etc/auto_update.status
+        touch /tmp/sd/.fw_upgrade/yi-hack/fw_upgrade_in_progress
+        MSG="Package from the SD card unpacked, rebooting and upgrading."
     fi
-
-    # Backup configuration
-    cp -rf $YI_HACK_PREFIX/etc/* /tmp/sd/.fw_upgrade.conf/
-    rm /tmp/sd/.fw_upgrade.conf/*.tar.gz
-
-    # Prepare new hack
-    tar zxvf ${MODEL_SUFFIX}_${LATEST_FW}.tgz
-    rm ${MODEL_SUFFIX}_${LATEST_FW}.tgz
-    mkdir -p /tmp/sd/.fw_upgrade/yi-hack/etc
-    cp -rf /tmp/sd/.fw_upgrade.conf/* /tmp/sd/.fw_upgrade/yi-hack/etc/
 
     # Report the status to the caller
     printf "Content-type: text/html\r\n\r\n"
-    printf "Download completed, rebooting and upgrading."
+    printf "%s" "$MSG"
 
     sync
     sync

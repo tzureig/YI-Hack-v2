@@ -167,7 +167,9 @@ APP.maintenance = (function($) {
             },
             success: function(response) {
                 setFwStatus(response);
-                waitForUpgrade();
+                if (/rebooting/.test(response)) {
+                    waitForUpgrade();
+                }
             },
             complete: function () {
                 $('#button-upgrade').attr("disabled", false);
@@ -176,17 +178,23 @@ APP.maintenance = (function($) {
     }
 
     function waitForUpgrade() {
+        // First wait until the camera goes offline (reboot), then until it is back
+        var wentOffline = false;
         setInterval(function() {
             $.ajax({
                 url: 'index.html',
                 cache: false,
                 success: function(data) {
-                    setFwStatus("Camera is upgrading.");
-                    $('#button-upgrade').attr("disabled", false);
-                    window.location.href = "index.html";
+                    if (wentOffline) {
+                        setFwStatus("Upgrade completed.");
+                        window.location.href = "index.html";
+                    } else {
+                        setFwStatus("Camera is rebooting to install the upgrade...");
+                    }
                 },
                 error: function(data) {
-                    setFwStatus("Waiting for the camera to come back online...");
+                    wentOffline = true;
+                    setFwStatus("Camera is upgrading, waiting for it to come back online...");
                 },
                 timeout: 3000,
             });
@@ -220,7 +228,7 @@ APP.maintenance = (function($) {
                 } else {
                     setFwStatus("Installed: " + data.fw_version + " - Available: " + data.latest_fw);
                 }
-                if ((data.fw_version == data.latest_fw) && (!data.local_fw)) {
+                if ((!data.newer) && (!data.local_fw)) {
                     $('#button-upgrade').attr("disabled", true);
                 }
             }

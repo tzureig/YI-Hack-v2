@@ -16,7 +16,8 @@
 * **Telnet** und **FTP-Server** sind ab Werk **aus**.
 * **SSH ohne Passwort ist gesperrt** (vorher war Login mit leerem Passwort möglich). Entweder SSH-Passwort setzen oder einen Schlüssel in `/tmp/sd/yi-hack/.ssh/authorized_keys` legen.
 * Ohne Benutzer/Passwort zeigt die Statusseite eine rote Warnung.
-* Firmware-Updates werden nur installiert, wenn die SHA-256-Prüfsumme aus dem Release stimmt und das Paket zum Kameramodell passt.
+* Firmware-Updates werden nur installiert, wenn `SHA256SUMS.txt` die **Ed25519-Signatur** des Release-Schlüssels trägt, die SHA-256-Prüfsumme des Pakets stimmt und das Paket zum Kameramodell passt. Der öffentliche Schlüssel ist in die Firmware eingebaut (`src/fwverify/fw_sign.pub`, geprüft von `bin/fwverify`). Nötig, weil BusyBox-`wget` keine TLS-Zertifikate prüft.
+* Der private Schlüssel liegt nur im GitHub-Secret `FW_SIGN_KEY` (und als Sicherung beim Besitzer). Geht er verloren, neuen Schlüssel erzeugen, `fw_sign.pub` ersetzen und die Kameras einmal von Hand aktualisieren.
 
 ## Grenzen (ehrlich)
 

@@ -68,12 +68,18 @@ CACHE=/tmp/snapshot_${RES_NAME}${WATERMARK:+_wm}.jpg
 LOCK=/tmp/snapshot.lock
 FALLBACK=$YI_HACK_PREFIX/etc/fallback.jpg
 
-cache_fresh()
+cache_younger_than()
 {
     [ -s $CACHE ] && [ -f $CACHE.ts ] || return 1
     read -r TS < $CACHE.ts
+    case "$TS" in ''|*[!0-9]*) return 1 ;; esac
     NOW=$(date +%s)
-    [ $((NOW - TS)) -le $CACHE_AGE ]
+    [ $((NOW - TS)) -le $1 ]
+}
+
+cache_fresh()
+{
+    cache_younger_than $CACHE_AGE
 }
 
 get_snapshot()
@@ -107,7 +113,9 @@ get_snapshot()
             N=$((N+1))
         done
     fi
-    if [ -s $CACHE ]; then
+    # Never hand out an old picture as if it were live: if the grabber keeps
+    # failing, clients get the fallback image instead of a frozen frame
+    if [ -s $CACHE ] && cache_younger_than 30; then
         SNAP=$CACHE
     else
         SNAP=$FALLBACK

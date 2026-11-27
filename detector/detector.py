@@ -18,6 +18,7 @@ import json
 import logging
 import os
 import signal
+import hmac
 import threading
 import time
 import urllib.request
@@ -381,7 +382,7 @@ def make_handler(cameras, auth):
         def _auth_ok(self):
             if not auth:
                 return True
-            if self.headers.get("Authorization") == auth:
+            if hmac.compare_digest(self.headers.get("Authorization", ""), auth):
                 return True
             self.send_response(401)
             self.send_header("WWW-Authenticate", 'Basic realm="yi-detector"')
@@ -495,6 +496,9 @@ def main():
     if http.get("username"):
         token = base64.b64encode(f'{http["username"]}:{http.get("password", "")}'.encode()).decode()
         auth = f"Basic {token}"
+    else:
+        log.warning("web interface WITHOUT password: everyone in the network can watch the "
+                    "cameras. Set http.username / http.password (needed for indoor cameras).")
     server = ThreadingHTTPServer(("0.0.0.0", int(http.get("port", 8090))), make_handler(cameras, auth))
     server.daemon_threads = True
     log.info("web interface on port %s, objects: %s", server.server_port,

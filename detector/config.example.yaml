@@ -37,7 +37,7 @@ mqtt:
 # Web interface / MJPEG stream
 http:
   port: 8090
-  # username: admin        # optional basic auth
-  # password: secret
+  username: admin          # basic auth, strongly recommended (indoor cameras!)
+  password: CHANGE-ME
 
 # threads: 0               # ONNX threads (0 = all cores)

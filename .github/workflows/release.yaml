@@ -13,6 +13,10 @@ on:
       version:
         description: 'Version / tag to create (e.g. 1.0.1)'
         required: true
+      prerelease:
+        description: 'Pre-release (only cameras with update channel "beta" install it)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -24,7 +28,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
       - name: Version
@@ -61,12 +65,45 @@ jobs:
           ls *.tgz
           sha256sum *.tgz > SHA256SUMS.txt
           cat SHA256SUMS.txt
+      - name: Sign checksums
+        env:
+          FW_SIGN_KEY: ${{ secrets.FW_SIGN_KEY }}
+        run: |
+          # The cameras only install a release whose SHA256SUMS.txt carries this
+          # Ed25519 signature (public key: src/fwverify/fw_sign.pub)
+          if [ -z "$FW_SIGN_KEY" ]; then
+            echo "::error::Secret FW_SIGN_KEY is missing, cameras would refuse this release"
+            exit 1
+          fi
+          umask 077
+          printf '%s\n' "$FW_SIGN_KEY" > /tmp/fw_sign_key.pem
+          cd out/all
+          openssl pkeyutl -sign -inkey /tmp/fw_sign_key.pem -rawin -in SHA256SUMS.txt -out SHA256SUMS.txt.sig
+          rm -f /tmp/fw_sign_key.pem
+          # Check the signature against the public key the firmware contains
+          PUB_HEX=$(tr -d ' \n' < ../../src/fwverify/fw_sign.pub)
+          python3 -c "import sys;open('/tmp/fw_sign_pub.der','wb').write(bytes.fromhex('302a300506032b6570032100'+sys.argv[1]))" "$PUB_HEX"
+          openssl pkey -pubin -inform DER -in /tmp/fw_sign_pub.der -out /tmp/fw_sign_pub.pem
+          openssl pkeyutl -verify -pubin -inkey /tmp/fw_sign_pub.pem -rawin -in SHA256SUMS.txt -sigfile SHA256SUMS.txt.sig
+      - name: Check packages
+        run: |
+          # Every package must contain the version, the signature checker and the upgrade marker
+          cd out/all
+          for P in *.tgz; do
+            tar tzf "$P" > /tmp/list.txt
+            for F in yi-hack/version yi-hack/model_suffix yi-hack/fw_upgrade_in_progress yi-hack/bin/fwverify; do
+              grep -qx "$F" /tmp/list.txt || { echo "::error::$F missing in $P"; exit 1; }
+            done
+            [ "$(tar xzf "$P" -O yi-hack/version)" = "${{ steps.ver.outputs.version }}" ] || { echo "::error::wrong version in $P"; exit 1; }
+          done
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.ver.outputs.version }}
           name: ${{ steps.ver.outputs.version }}
           body_path: RELEASE_NOTES.md
+          prerelease: ${{ github.event.inputs.prerelease == 'true' || contains(steps.ver.outputs.version, '-') }}
           files: |
             out/all/*.tgz
             out/all/SHA256SUMS.txt
+            out/all/SHA256SUMS.txt.sig
