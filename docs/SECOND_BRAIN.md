@@ -3,7 +3,7 @@ title: YI-Hack-Tiz – Second Brain
 tags: [yi-hack, kamera, firmware, home-assistant, frigate, unifi, smarthome]
 status: aktiv
 erstellt: 2026-11-26
-aktualisiert: 2026-11-26
+aktualisiert: 2026-11-27
 repo: https://github.com/tzureig/YI-Hack-Tiz
 ---
 
@@ -111,10 +111,14 @@ repo: https://github.com/tzureig/YI-Hack-Tiz
 * Snapshot: 5 gleichzeitige Abrufe → 1 Decoder; Decoder-Fehler → Ersatzbild.
 * Passwort-Speicherung: Hash verifiziert, `********` behält den Wert, Browser sieht keine Passwörter.
 * yi-detector: Person 92 % (blau), Hund 89–93 % (grün, auch sitzend/still), Pferd (orange); RTSP- und Snapshot-Quelle, MJPEG, JSON, MQTT-Discovery.
+* Fertig gebaute Weboberfläche (gzip/minifiziert aus dem 1.0.0-Paket) im Browser (Playwright) gegen simulierte Kamera: Statusseite (Dienste, Swap, dBm, Update-Status), Einstellungen (alle Felder laden, Syslog bleibt erhalten, Passwort geht nur als `********` zurück, Speichern ok), Log-Ansicht – **keine JavaScript-Fehler**.
+* Release 1.0.0 von GitHub geladen und wie die Kamera geprüft: SHA-256 ok, 20 Modelle, Version/Modell im Paket korrekt.
+* GitHub Actions: Build ✅, Release ✅ (nach Fix der Dateirechte), Detector-Image ✅ (nach Fix fehlender GL-Bibliotheken im Export-Schritt).
 * **Noch nicht** auf echter Kamera-Hardware getestet → erst mit einer Kamera ausprobieren.
 
 ## 8. Offene Ideen / nächste Schritte
 
+* [ ] **Second Brain auf dem MacBook:** Diese Datei ist die Quelle. Für die Übernahme in die lokale Notiz-Sammlung (z. B. Obsidian) muss der Ordner in der Claude-Desktop-App freigegeben werden (*Einstellungen → Claude Code → Remote Control*), dann kann Claude den Eintrag dort anlegen – oder die Datei einfach in den Vault kopieren (das Frontmatter ist Obsidian-kompatibel).
 * [ ] **Repo ist privat** → Kameras (ohne GitHub-Login) können Releases nicht laden; Auto-Update und „Upgrade Firmware“ funktionieren erst, wenn das Repo öffentlich ist (*Settings → General → Danger Zone → Change visibility*). Alternativ `AUTO_UPDATE_REPO` auf ein öffentliches Repo stellen.
 * [ ] Erste echte Kamera mit 1.0.0 flashen und 24 h beobachten (Watchdog-Log, Update-Status).
 * [ ] GHCR-Paket `yi-detector` in GitHub auf **public** stellen (für das HA-Add-on nötig).
@@ -124,4 +128,5 @@ repo: https://github.com/tzureig/YI-Hack-Tiz
 
 ## 9. Verlauf
 
+* **2026-11-27** – Komplett-Durchsicht: Web-UI im Browser getestet (fehlerfrei), Release 1.0.0 verifiziert. Korrigiert: „GitHub project“-Link auf der Statusseite zeigt jetzt auf YI-Hack-Tiz, README-Links absolut, überflüssiger `stale.yml`-Workflow entfernt (spart Actions-Minuten im privaten Repo). Hinweis: Wirksam auf der Kamera ab dem nächsten Release (z. B. 1.0.1).
 * **2026-11-26** – Projekt gestartet: Analyse von yi-hack-Allwinner-v2, Watchdog-Ausbau, Statusseite/Logs/Health, Fehlerbehebungen (Syslog-Feld, Ethernet-Static-IP, Watchdog-Ende bei RTSP-Stopp). Sicherheit (SHA-512), Auto-Update mit Prüfsumme, Snapshot-Cache, HA/Frigate/UniFi-Doku, GitHub-Workflows, Repo `tzureig/YI-Hack-Tiz` mit voller Historie, Release 1.0.0, yi-detector (Person blau, Hund grün).
