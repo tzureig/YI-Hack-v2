@@ -64,6 +64,11 @@ jobs:
           cd out/all
           ls *.tgz
           sha256sum *.tgz > SHA256SUMS.txt
+          # Compatibility lines for the updater of 1.0.1-1.0.3: it searches with
+          # grep " \*\?PKG$", and the camera's grep reads "\?" literally, so
+          # it needs " *?PKG". Newer updaters compare the whole file name field
+          # and ignore these lines. The file is signed afterwards as a whole.
+          sha256sum *.tgz | awk '{ print $1 " *?" $2 }' >> SHA256SUMS.txt
           cat SHA256SUMS.txt
       - name: Sign checksums
         env:

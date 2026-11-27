@@ -198,7 +198,9 @@ if ! $FWVERIFY SHA256SUMS.txt SHA256SUMS.txt.sig >/dev/null 2>&1; then
 fi
 log "Signature ok"
 
-EXPECTED=$(awk -v pkg="$PKG" '$NF == pkg {print $1; exit}' SHA256SUMS.txt)
+# Last field = file name (also with a "*" binary marker or a CR line end).
+# No grep regex here: the camera's grep did not find the package (1.0.1-1.0.3).
+EXPECTED=$(awk -v pkg="$PKG" '{ sub(/\r$/, ""); f = $NF; sub(/^\*/, "", f) } f == pkg && $1 ~ /^[0-9a-f]+$/ && length($1) == 64 { print $1; exit }' SHA256SUMS.txt)
 if [ -z "$EXPECTED" ]; then
     fail "No package for this model ($MODEL_SUFFIX) in release $LATEST"
 fi

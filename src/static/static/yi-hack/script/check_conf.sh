@@ -180,15 +180,38 @@ do
     fi
 done
 
+# Markers of earlier versions had a different prefix: rename them so that the
+# one-time changes below are not applied a second time.
+sed -i "s/^TIZ_REC_PERSON=/YIV2_REC_PERSON=/; s/^TIZ_V102=/YIV2_V102=/" $SYSTEM_CONF_FILE
+# Releases moved to tzureig/YI-Hack-v2 (the old name only works via redirect)
+sed -i "s|^AUTO_UPDATE_REPO=tzureig/YI-Hack-Tiz$|AUTO_UPDATE_REPO=tzureig/YI-Hack-v2|" $SYSTEM_CONF_FILE
+
 # YI-Hack-v2: record to the SD card when a person is detected. Applied once
-# to existing installations (marker TIZ_REC_PERSON), later changes in the web
+# to existing installations (marker YIV2_REC_PERSON), later changes in the web
 # interface are kept.
-if ! grep -q "^TIZ_REC_PERSON=done" $SYSTEM_CONF_FILE; then
+if ! grep -q "^YIV2_REC_PERSON=done" $SYSTEM_CONF_FILE; then
     sed -i "s/^REC_WITHOUT_CLOUD=.*/REC_WITHOUT_CLOUD=yes/" $SYSTEM_CONF_FILE
     if grep -q "^FREE_SPACE=0$" $SYSTEM_CONF_FILE; then
         # delete the oldest recordings when less than 10 % of the SD is free
         sed -i "s/^FREE_SPACE=0$/FREE_SPACE=10/" $SYSTEM_CONF_FILE
     fi
     sed -i "s/^SWITCH_ON=.*/SWITCH_ON=yes/; s/^SAVE_VIDEO_ON_MOTION=.*/SAVE_VIDEO_ON_MOTION=yes/; s/^MOTION_DETECTION=.*/MOTION_DETECTION=no/; s/^AI_HUMAN_DETECTION=.*/AI_HUMAN_DETECTION=yes/" $CAMERA_CONF_FILE
-    echo "TIZ_REC_PERSON=done" >> $SYSTEM_CONF_FILE
+    echo "YIV2_REC_PERSON=done" >> $SYSTEM_CONF_FILE
+fi
+
+# YI-Hack-v2 1.0.2: both streams for Home Assistant / Frigate (detection on
+# the substream) and unique MQTT names, so that several cameras do not kick
+# each other off the broker or merge into one Home Assistant device.
+# MQTT names are changed only while MQTT is not in use.
+if ! grep -q "^YIV2_V102=done" $SYSTEM_CONF_FILE; then
+    sed -i "s/^RTSP_STREAM=.*/RTSP_STREAM=both/; s/^ONVIF_PROFILE=.*/ONVIF_PROFILE=both/" $SYSTEM_CONF_FILE
+    # last 6 hex digits of the MAC (busybox here has no tr)
+    MAC6=$(cat /sys/class/net/wlan0/address /sys/class/net/eth0/address 2>/dev/null | head -n1 | sed 's/[^0-9a-fA-F]//g' | awk '{print tolower(substr($0, length($0) - 5))}')
+    if [ -n "$MAC6" ] && ! grep -q "^MQTT=yes" $SYSTEM_CONF_FILE; then
+        sed -i "s/^MQTT_CLIENT_ID=yi-cam$/MQTT_CLIENT_ID=yi-cam-$MAC6/; s/^MQTT_PREFIX=yicam$/MQTT_PREFIX=yicam\/$MAC6/" $MQTTV4_CONF_FILE
+        if [ -f /tmp/sd/yi-hack/etc/mqtt_advertise.conf ]; then
+            sed -i "s/^HOMEASSISTANT_IDENTIFIERS=yi-cam$/HOMEASSISTANT_IDENTIFIERS=yi-cam-$MAC6/" /tmp/sd/yi-hack/etc/mqtt_advertise.conf
+        fi
+    fi
+    echo "YIV2_V102=done" >> $SYSTEM_CONF_FILE
 fi
