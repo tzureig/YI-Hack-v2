@@ -7,6 +7,9 @@ Für jedes Kameramodell gibt es ein eigenes Paket `MODELL_VERSION.tgz` (Modellta
 * **Ab 1.0.1:** Updates kommen automatisch nachts, nur signiert.
 * **Prüfsummen:** `SHA256SUMS.txt`, Signatur `SHA256SUMS.txt.sig` (Ed25519)
 
+### Neu in 1.0.3
+* Update-Erkennung liest den Paketnamen robust aus `SHA256SUMS.txt`; so wird `y211ga` und jedes andere Modell auch mit BusyBox-`awk` gefunden.
+
 ### Neu in 1.0.1
 * Updates nur noch mit Ed25519-Signatur (eigener kleiner Prüfer `fwverify`), nie ein Downgrade, Beta-Kanal für eine Testkamera.
 * „Upgrade Firmware“ in der Weboberfläche nutzt dieselbe geprüfte Logik; ein von Hand auf die SD gelegtes Paket wird auf das Modell geprüft.

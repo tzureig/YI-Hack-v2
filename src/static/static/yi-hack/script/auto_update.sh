@@ -198,7 +198,7 @@ if ! $FWVERIFY SHA256SUMS.txt SHA256SUMS.txt.sig >/dev/null 2>&1; then
 fi
 log "Signature ok"
 
-EXPECTED=$(grep " \*\?$PKG\$" SHA256SUMS.txt | awk '{print $1}' | head -n1)
+EXPECTED=$(awk -v pkg="$PKG" '$NF == pkg {print $1; exit}' SHA256SUMS.txt)
 if [ -z "$EXPECTED" ]; then
     fail "No package for this model ($MODEL_SUFFIX) in release $LATEST"
 fi

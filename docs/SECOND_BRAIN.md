@@ -133,6 +133,8 @@ repo: https://github.com/tzureig/YI-Hack-v2
 
 ## 9. Verlauf
 
+* **2026-11-27 (3)** – Repo-Namen auf `YI-Hack-v2` vereinheitlicht. Update-Fehler behoben: Paketname wird direkt aus dem Dateinamen-Feld in `SHA256SUMS.txt` gelesen.
+
 * **2026-11-27 (2)** – Version 1.0.1 vorbereitet: signierte Updates (fwverify), Beta-Kanal, kein Downgrade, Web-Upgrade nutzt denselben geprüften Weg, Modellprüfung für SD-Pakete, Snapshot ohne eingefrorenes Bild, Build-Fix (zlib.net, `fetch.sh` mit Prüfsummen), Release prüft und signiert Pakete, Upstream-PR startet Build, Detector-Härtung.
 * **2026-11-27** – Komplett-Durchsicht: Web-UI im Browser getestet (fehlerfrei), Release 1.0.0 verifiziert. Korrigiert: „GitHub project“-Link auf der Statusseite zeigt jetzt auf YI-Hack-v2, README-Links absolut, überflüssiger `stale.yml`-Workflow entfernt (spart Actions-Minuten im privaten Repo). Hinweis: Wirksam auf der Kamera ab dem nächsten Release (z. B. 1.0.1).
 * **2026-11-26** – Projekt gestartet: Analyse von yi-hack-Allwinner-v2, Watchdog-Ausbau, Statusseite/Logs/Health, Fehlerbehebungen (Syslog-Feld, Ethernet-Static-IP, Watchdog-Ende bei RTSP-Stopp). Sicherheit (SHA-512), Auto-Update mit Prüfsumme, Snapshot-Cache, HA/Frigate/UniFi-Doku, GitHub-Workflows, Repo `tzureig/YI-Hack-v2` mit voller Historie, Release 1.0.0, yi-detector (Person blau, Hund grün).
