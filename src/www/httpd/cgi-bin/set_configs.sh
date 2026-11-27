@@ -117,6 +117,9 @@ for ROW in $ROWS; do
         fi
         # Apply now (no reboot needed)
         if [ -n "$HASH" ]; then
+            # An empty password field in /etc/passwd makes dropbear ignore
+            # /etc/shadow (it then refused every password until a reboot)
+            sed -i 's|^root::|root:x:|' /etc/passwd
             sed -i "s|^root:[^:]*:|root:${HASH}:|" /etc/shadow
         else
             sed -i "s|^root:[^:]*:|root::|" /etc/shadow

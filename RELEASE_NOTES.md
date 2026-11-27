@@ -9,6 +9,7 @@ Für jedes Kameramodell gibt es ein eigenes Paket `MODELL_VERSION.tgz` (Modellta
 
 ### Neu in 1.1
 * **Update-Problem behoben:** Kameras mit 1.0.1 bis 1.0.3 meldeten beim Online-Update „No package for this model“, weil das `grep` der Kamera den Paketnamen in `SHA256SUMS.txt` nicht fand. Ab 1.1 enthält die signierte `SHA256SUMS.txt` zusätzlich Zeilen, die auch der alte Updater findet. Der neue Updater liest den Paketnamen ohne `grep`.
+* **SSH-Passwort wirkt sofort:** In 1.0.x lehnte SSH ein in der Weboberfläche gesetztes Passwort bis zum nächsten Neustart ab.
 * **Neue Weboberfläche:** modernes Kartenlayout in Hell und Dunkel, aktive Seite im Menü markiert.
 * **Neue Seite „Smart Home“:** Live-Vorschau, Status (Online, Streams, ONVIF, MQTT, Passwort) und fertige Konfiguration zum Kopieren mit den echten Adressen der Kamera für **Home Assistant** (ONVIF, go2rtc, MQTT-Automation, Verfügbarkeits-Sensor, Dashboard-Karte), **Frigate**, **Scrypted** und **UniFi Protect**.
 * **Live-Ansicht bleibt nicht mehr schwarz:** Startet das Video nicht innerhalb von 12 s, zeigt sie laufend Standbilder. Die gewählte Auflösung wird gemerkt.
