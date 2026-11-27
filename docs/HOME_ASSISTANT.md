@@ -1,4 +1,5 @@
 # Home Assistant
+> **Am einfachsten:** In der Weboberfläche der Kamera die Seite **Home Assistant** öffnen. Dort steht die passende Konfiguration mit den echten Adressen zum Kopieren.
 
 Es gibt drei Wege, die sich gut kombinieren lassen.
 

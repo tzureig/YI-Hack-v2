@@ -1,0 +1,427 @@
+/*
+ * YI-Hack-Tiz theme: loaded after skeleton + custom.css and only restyles
+ * the existing markup (no page needs to change). Light and dark follow the
+ * theme switcher (data-theme on <html>).
+ */
+
+:root {
+    --tz-bg: #f4f6f9;
+    --tz-surface: #ffffff;
+    --tz-surface-2: #f0f2f6;
+    --tz-text: #1b2230;
+    --tz-muted: #667085;
+    --tz-border: #e3e7ee;
+    --tz-accent: #0a84ff;
+    --tz-accent-strong: #0060df;
+    --tz-accent-soft: rgba(10, 132, 255, 0.12);
+    --tz-ok: #12b76a;
+    --tz-warn: #f79009;
+    --tz-bad: #f04438;
+    --tz-radius: 14px;
+    --tz-shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 4px 16px rgba(16, 24, 40, 0.06);
+    --background-color: var(--tz-surface) !important;
+    --text-color: var(--tz-text) !important;
+}
+
+[data-theme="dark"] {
+    --tz-bg: #0f1218;
+    --tz-surface: #181c24;
+    --tz-surface-2: #212633;
+    --tz-text: #e8ebf1;
+    --tz-muted: #98a2b3;
+    --tz-border: #2a3040;
+    --tz-accent: #3d9bff;
+    --tz-accent-strong: #66b1ff;
+    --tz-accent-soft: rgba(61, 155, 255, 0.16);
+    --tz-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.35);
+    --background-color: var(--tz-surface) !important;
+    --text-color: var(--tz-text) !important;
+}
+
+html {
+    font-size: 62.5%;
+}
+
+body,
+[data-theme="dark"] body {
+    background: var(--tz-bg);
+    color: var(--tz-text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 1.5rem;
+    line-height: 1.55;
+    padding-top: 76px;
+}
+
+.container {
+    max-width: 1080px;
+}
+
+/* ---------- navigation ---------- */
+
+nav,
+nav ul,
+[data-theme="dark"] nav {
+    background: var(--tz-surface);
+    color: var(--tz-text);
+}
+
+nav {
+    border-bottom: 1px solid var(--tz-border);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+}
+
+nav ul li a {
+    color: var(--tz-muted);
+    padding: 12px 12px;
+    margin: 8px 2px;
+    border-radius: 10px;
+    line-height: 0;
+}
+
+nav ul li a svg {
+    vertical-align: middle;
+}
+
+nav ul li a:hover {
+    background: var(--tz-accent-soft);
+    color: var(--tz-accent);
+}
+
+nav ul li a.active {
+    background: var(--tz-accent-soft);
+    color: var(--tz-accent);
+}
+
+#nav-title {
+    color: var(--tz-text);
+    padding-left: 4px;
+}
+
+#nav-title:hover {
+    background: transparent;
+    color: var(--tz-accent);
+}
+
+/* ---------- page header ---------- */
+
+#container h3 {
+    font-size: 2.8rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 18px 0 4px 0;
+}
+
+#container h3 + hr,
+#container h3 + hr.tiny-margin {
+    display: none;
+}
+
+#container h3 + p,
+#container h3 ~ p:first-of-type {
+    color: var(--tz-muted);
+}
+
+/* ---------- sections as cards ---------- */
+
+#container h5 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--tz-muted);
+    margin: 28px 0 10px 4px;
+}
+
+#container h5 + hr {
+    display: none;
+}
+
+#container table {
+    width: 100%;
+    background: var(--tz-surface);
+    border: 1px solid var(--tz-border);
+    border-radius: var(--tz-radius);
+    box-shadow: var(--tz-shadow);
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+#container table tr td,
+#container table tr th {
+    border-bottom: 1px solid var(--tz-border);
+    padding: 12px 18px;
+    vertical-align: middle;
+}
+
+#container table tr:last-child td {
+    border-bottom: none;
+}
+
+#container table td:first-child {
+    color: var(--tz-muted);
+    font-weight: 500;
+}
+
+table.padded-table tr td,
+table.config-table tr td {
+    padding: 12px 18px;
+}
+
+.switch-description {
+    display: block;
+    margin-top: 6px;
+    color: var(--tz-muted);
+    font-size: 1.3rem;
+    line-height: 1.45;
+}
+
+#container a {
+    color: var(--tz-accent);
+    text-decoration: none;
+}
+
+#container a:hover {
+    text-decoration: underline;
+}
+
+/* ---------- form controls ---------- */
+
+input[type="email"],
+input[type="number"],
+input[type="search"],
+input[type="text"],
+input[type="tel"],
+input[type="url"],
+input[type="password"],
+textarea,
+select {
+    background: var(--tz-surface-2);
+    color: var(--tz-text);
+    border: 1px solid var(--tz-border);
+    border-radius: 10px;
+    height: 40px;
+    box-shadow: none;
+}
+
+textarea {
+    height: auto;
+    min-height: 80px;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+    border-color: var(--tz-accent);
+    box-shadow: 0 0 0 3px var(--tz-accent-soft);
+    outline: none;
+}
+
+input[readonly] {
+    background: transparent;
+    border-color: transparent;
+    padding-left: 0;
+}
+
+.button,
+button,
+input[type="submit"],
+input[type="reset"],
+input[type="button"] {
+    border-radius: 10px;
+    border: 1px solid var(--tz-border);
+    background: var(--tz-surface);
+    color: var(--tz-text);
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    height: 40px;
+    line-height: 38px;
+    padding: 0 18px;
+    transition: background 0.15s, transform 0.05s;
+}
+
+.button.button-primary,
+button.button-primary,
+input[type="submit"].button-primary,
+input[type="reset"].button-primary,
+input[type="button"].button-primary {
+    background: var(--tz-accent);
+    border-color: var(--tz-accent);
+    color: #fff;
+}
+
+.button.button-primary:hover,
+button.button-primary:hover,
+input[type="button"].button-primary:hover,
+input[type="submit"].button-primary:hover {
+    background: var(--tz-accent-strong);
+    border-color: var(--tz-accent-strong);
+    color: #fff;
+}
+
+input[type="button"]:active,
+button:active {
+    transform: translateY(1px);
+}
+
+input[type="button"][disabled],
+button[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.slider {
+    background-color: var(--tz-border);
+}
+
+input:checked + .slider {
+    background-color: var(--tz-ok);
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 0 3px var(--tz-accent-soft);
+}
+
+.standard-select::after {
+    color: var(--tz-muted);
+}
+
+/* ---------- status badges (status page) ---------- */
+
+.tz-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    line-height: 2rem;
+    background: var(--tz-surface-2);
+    color: var(--tz-muted);
+}
+
+.tz-badge.ok {
+    background: rgba(18, 183, 106, 0.14);
+    color: var(--tz-ok);
+}
+
+.tz-badge.warn {
+    background: rgba(247, 144, 9, 0.14);
+    color: var(--tz-warn);
+}
+
+.tz-badge.bad {
+    background: rgba(240, 68, 56, 0.14);
+    color: var(--tz-bad);
+}
+
+/* ---------- live view ---------- */
+
+.live-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin: 12px 0;
+}
+
+.live-controls .button-primary,
+.live-controls input[type="button"] {
+    margin: 0;
+}
+
+#live-status {
+    color: var(--tz-muted);
+    font-size: 1.3rem;
+    margin: 6px 0 8px 2px;
+}
+
+#live-video,
+#live-img {
+    border-radius: var(--tz-radius);
+    box-shadow: var(--tz-shadow);
+    background: #000;
+    aspect-ratio: 16 / 9;
+}
+
+/* ---------- Home Assistant page ---------- */
+
+.tz-card {
+    background: var(--tz-surface);
+    border: 1px solid var(--tz-border);
+    border-radius: var(--tz-radius);
+    box-shadow: var(--tz-shadow);
+    padding: 18px 20px;
+    margin-bottom: 14px;
+}
+
+.tz-card h6 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 0 0 6px 0;
+}
+
+.tz-card p {
+    color: var(--tz-muted);
+    margin-bottom: 10px;
+}
+
+.tz-code {
+    position: relative;
+    background: var(--tz-surface-2);
+    border: 1px solid var(--tz-border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 1.25rem;
+    line-height: 1.5;
+    white-space: pre;
+    overflow-x: auto;
+    color: var(--tz-text);
+    margin: 0 0 8px 0;
+}
+
+.tz-copy {
+    float: right;
+    height: 30px !important;
+    line-height: 28px !important;
+    padding: 0 12px !important;
+    font-size: 1.1rem !important;
+}
+
+.tz-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.tz-grid .tz-card {
+    flex: 1 1 300px;
+    margin-bottom: 0;
+}
+
+.tz-preview {
+    width: 100%;
+    border-radius: var(--tz-radius);
+    box-shadow: var(--tz-shadow);
+    background: #000;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    display: block;
+}
+
+@media screen and (max-width: 880px) {
+    body {
+        padding-top: 64px;
+    }
+    #container table tr td {
+        padding: 10px 12px;
+    }
+    nav.mobile ul li a {
+        line-height: 1.5;
+        margin: 2px 8px;
+    }
+}

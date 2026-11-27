@@ -32,10 +32,20 @@ APP.live = (function($) {
     var snapTimer = null;
     var running = false;
     var audioEnabled = false;
+    var startTimer = null;    // falls back to snapshots if the video does not start
+    var liveOk = false;
+    var START_TIMEOUT = 12000;
+    var RES_KEY = 'live-res';
 
     function init() {
         video = document.getElementById('live-video');
         audioEnabled = loadAudioSetting();
+        try {
+            var savedRes = window.localStorage.getItem(RES_KEY);
+            if (savedRes == 'low' || savedRes == 'high') {
+                $('#live-res').val(savedRes);
+            }
+        } catch (e) {}
         updateAudioButton();
         registerEventHandler();
         start();
@@ -53,6 +63,7 @@ APP.live = (function($) {
             toggleAudio();
         });
         $(document).on('change', '#live-res', function(e) {
+            try { window.localStorage.setItem(RES_KEY, getRes()); } catch (err) {}
             if (running) {
                 start();
             }
@@ -116,8 +127,8 @@ APP.live = (function($) {
     /* Start/stop                                                          */
     /* ------------------------------------------------------------------ */
 
-    function start() {
-        stop();
+    function start(isRetry) {
+        stop(isRetry === true);
         running = true;
         if (!MSE || !window.fetch || !window.ReadableStream) {
             startSnapshotFallback();
@@ -125,10 +136,28 @@ APP.live = (function($) {
         }
         session = new Session(getRes(), audioEnabled);
         session.start();
+        // Some browsers / slow Wi-Fi never get the video going: do not leave
+        // a black box, show refreshing snapshots instead
+        if (isRetry === true && startTimer) {
+            return;     // keep the timer of the first attempt
+        }
+        liveOk = false;
+        startTimer = setTimeout(function() {
+            startTimer = null;
+            if (running && !liveOk) {
+                stop();
+                running = true;
+                startSnapshotFallback('The live video did not start (browser or Wi-Fi too slow) - showing snapshots. Press Play to try the video again.');
+            }
+        }, START_TIMEOUT);
     }
 
-    function stop() {
+    function stop(keepStartTimer) {
         running = false;
+        if (startTimer && keepStartTimer !== true) {
+            clearTimeout(startTimer);
+            startTimer = null;
+        }
         if (retryTimer) {
             clearTimeout(retryTimer);
             retryTimer = null;
@@ -151,7 +180,7 @@ APP.live = (function($) {
         retryTimer = setTimeout(function() {
             retryTimer = null;
             if (running) {
-                start();
+                start(true);
             }
         }, RETRY_DELAY);
     }
@@ -174,10 +203,10 @@ APP.live = (function($) {
     /* Fallback: periodic snapshots (browsers without MSE)                 */
     /* ------------------------------------------------------------------ */
 
-    function startSnapshotFallback() {
+    function startSnapshotFallback(reason) {
         $('#live-video').hide();
         $('#live-img').show();
-        setStatus('Your browser does not support Media Source Extensions: showing snapshots');
+        setStatus(reason || 'Your browser does not support Media Source Extensions: showing snapshots');
         var img = document.getElementById('live-img');
         var res = getRes();
 
@@ -321,9 +350,10 @@ APP.live = (function($) {
 
     Session.prototype.handleError = function(e) {
         if (e && e.fatal) {
-            // Retrying would not help (e.g. unsupported codec)
+            // Retrying would not help (e.g. unsupported codec): snapshots
             stop();
-            setStatus(e.message);
+            running = true;
+            startSnapshotFallback(e.message + ' - showing snapshots instead.');
         } else {
             this.fail((e && e.message) || 'Decoding error');
         }
@@ -629,6 +659,7 @@ APP.live = (function($) {
             })(this.tracks[i]);
         }
 
+        liveOk = true;
         setStatus('Live - ' + this.info + (this.audio ? ' - audio ' + this.audioInfo : '') + this.note);
 
         var p = video.play();

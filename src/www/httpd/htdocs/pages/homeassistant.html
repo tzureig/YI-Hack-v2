@@ -1,0 +1,63 @@
+<div class="row">
+    <div class="twelf columns">
+        <h3 class="no-margin" id="header">Home Assistant</h3>
+        <hr class="tiny-margin"/>
+        <p>Everything to connect this camera to Home Assistant, Frigate and UniFi Protect. The snippets use this camera's real addresses; replace <b>PASSWORD</b> with your camera password (it is never shown here).</p>
+
+        <div class="tz-grid">
+            <div class="tz-card">
+                <h6>Live preview</h6>
+                <img id="ha-preview" class="tz-preview" alt="Snapshot"/>
+                <p style="margin:8px 0 0 0;" id="ha-preview-text">Snapshot, refreshed every 5 seconds.</p>
+            </div>
+            <div class="tz-card">
+                <h6>Status</h6>
+                <table class="u-full-width" style="box-shadow:none; margin:0;">
+                    <tbody>
+                    <tr><td>Camera</td><td id="ha-health"><span class="tz-badge">…</span></td></tr>
+                    <tr><td>Streams</td><td id="ha-streams"><span class="tz-badge">…</span></td></tr>
+                    <tr><td>ONVIF</td><td id="ha-onvif"><span class="tz-badge">…</span></td></tr>
+                    <tr><td>MQTT</td><td id="ha-mqtt"><span class="tz-badge">…</span></td></tr>
+                    <tr><td>Login</td><td id="ha-auth"><span class="tz-badge">…</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h5 class="tiny-margin strong">1. Easiest: ONVIF integration</h5>
+        <div class="tz-card">
+            <p>Home Assistant → Settings → Devices &amp; services → Add integration → <b>ONVIF</b>. The camera is usually found automatically, otherwise enter:</p>
+            <pre class="tz-code" id="ha-onvif-code"></pre>
+            <p>You get the camera with live stream and snapshots. Motion events come via MQTT (step 3).</p>
+        </div>
+
+        <h5 class="tiny-margin strong">2. Fast live view: go2rtc (built into Home Assistant)</h5>
+        <div class="tz-card">
+            <p>Add to <code>configuration.yaml</code>, restart, then add a <b>Generic camera</b> with the stream <code>rtsp://127.0.0.1:8554/NAME</code> or use the WebRTC card. Main stream for viewing, substream for dashboards and detection.</p>
+            <pre class="tz-code" id="ha-go2rtc-code"></pre>
+        </div>
+
+        <h5 class="tiny-margin strong">3. Motion, person detection and switches: MQTT</h5>
+        <div class="tz-card">
+            <p id="ha-mqtt-text">Enable MQTT with your broker (e.g. the Mosquitto add-on) under <a href="?page=mqtt">MQTT</a>, then enable Home Assistant discovery under <a href="?page=mqtt_adv">MQTT advertise</a>. The camera then appears as a device with motion, person detection, recording switches, Wi-Fi signal, SD space and more – no YAML needed.</p>
+            <pre class="tz-code" id="ha-mqtt-code"></pre>
+        </div>
+
+        <h5 class="tiny-margin strong">4. Availability sensor (optional)</h5>
+        <div class="tz-card">
+            <p>A binary sensor that turns off when the camera hangs (health check: camera process and RTSP server).</p>
+            <pre class="tz-code" id="ha-health-code"></pre>
+        </div>
+
+        <h5 class="tiny-margin strong">5. Frigate</h5>
+        <div class="tz-card">
+            <p>Detection on the light substream, recording from the main stream.</p>
+            <pre class="tz-code" id="ha-frigate-code"></pre>
+        </div>
+
+        <h5 class="tiny-margin strong">6. Dashboard card</h5>
+        <div class="tz-card">
+            <pre class="tz-code" id="ha-card-code"></pre>
+        </div>
+    </div>
+</div>

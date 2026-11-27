@@ -129,6 +129,9 @@ IDENTIFIERS=$(get_mqtt_advertise_config HOMEASSISTANT_IDENTIFIERS)
 MANUFACTURER=$(get_mqtt_advertise_config HOMEASSISTANT_MANUFACTURER)
 MODEL=$(get_mqtt_advertise_config HOMEASSISTANT_MODEL)
 SW_VERSION=$(cat $YI_HACK_PREFIX/version)
+# Sensible defaults: the camera's hostname as device name, firmware + model
+[ -z "$NAME" ] && NAME=$(hostname)
+[ -z "$MODEL" ] && MODEL="YI-Hack-Tiz $(cat $YI_HACK_PREFIX/model_suffix)"
 DEVICE_DETAILS="{\"identifiers\":[\"$IDENTIFIERS\"],\"connections\":[[\"mac\",\"${LOCAL_MAC}\"]],\"manufacturer\":\"$MANUFACTURER\",\"model\":\"$MODEL\",\"name\":\"$NAME\",\"sw_version\":\"$SW_VERSION\",\"configuration_url\":\"http://$LOCAL_IP:$HTTPD_PORT\"}"
 if [ "$HOMEASSISTANT_RETAIN" == "1" ]; then
     HA_RETAIN="-r"

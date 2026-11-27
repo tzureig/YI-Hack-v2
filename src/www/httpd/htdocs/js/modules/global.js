@@ -24,6 +24,7 @@ APP.global = (function($) {
         loadPage(currentPage);
         //        $('#nav-title').text(hostname);
         document.title = hostname + " - " + currentPage;
+        $('nav a[href="?page=' + currentPage + '"]').addClass('active');
     }
 
     function retrievePageFromUrl() {

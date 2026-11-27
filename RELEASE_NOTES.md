@@ -7,6 +7,13 @@ Für jedes Kameramodell gibt es ein eigenes Paket `MODELL_VERSION.tgz` (Modellta
 * **Ab 1.0.1:** Updates kommen automatisch nachts, nur signiert.
 * **Prüfsummen:** `SHA256SUMS.txt`, Signatur `SHA256SUMS.txt.sig` (Ed25519)
 
+### Neu in 1.0.2
+* **Neue Weboberfläche:** modernes Kartenlayout in Hell und Dunkel, aktive Seite im Menü markiert.
+* **Neue Seite „Home Assistant“:** Live-Vorschau, Status (Online, Streams, ONVIF, MQTT, Passwort) und fertige Konfiguration zum Kopieren mit den echten Adressen der Kamera: ONVIF, go2rtc, MQTT-Automation, Verfügbarkeits-Sensor, Frigate, Dashboard-Karte.
+* **Live-Ansicht bleibt nicht mehr schwarz:** Startet das Video nicht innerhalb von 12 s (Browser oder WLAN zu langsam), zeigt sie automatisch laufend Standbilder. Die gewählte Auflösung wird gemerkt.
+* **Mehrere Kameras in Home Assistant:** eindeutige MQTT-Client-ID, eindeutiges Topic-Präfix und eindeutige Geräte-ID pro Kamera (aus der MAC-Adresse), Gerätename = Hostname. Wird einmalig gesetzt, solange MQTT noch nicht benutzt wird.
+* Haupt- und Substream werden beim Update eingeschaltet (für Frigate-Erkennung und HA-Kacheln).
+
 ### Neu in 1.0.1
 * Updates nur noch mit Ed25519-Signatur (eigener kleiner Prüfer `fwverify`), nie ein Downgrade, Beta-Kanal für eine Testkamera.
 * „Upgrade Firmware“ in der Weboberfläche nutzt dieselbe geprüfte Logik; ein von Hand auf die SD gelegtes Paket wird auf das Modell geprüft.
