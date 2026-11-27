@@ -134,6 +134,8 @@ repo: https://github.com/tzureig/YI-Hack-v2
 
 ## 9. Verlauf
 
+* **2026-11-27 (5)** – 1.1 und 1.1.1: neue Weboberfläche und Seite „Smart Home“ (HA, Frigate, Scrypted, UniFi Protect), neutraler Name, SSH-Passwort sofort wirksam. Update-Problem gelöst: Der alte Updater findet auf der Kamera kein Paket, der neue sucht nur mit `awk`. 1.0.x-Kameras aktualisieren über eine einmalige Crontab-Zeile (siehe Release-Notes 1.1.1). Ausgang Keller (y211ga) läuft mit 1.1.1.
+
 * **2026-11-27 (4)** – Release 1.0.3 stabil veröffentlicht; Build, Paketprüfungen und Ed25519-Signatur erfolgreich. `y211ga_1.0.3.tgz` vorhanden; entpacktes Paket bestätigt Parser-Fix und `AUTO_UPDATE_REPO=tzureig/YI-Hack-v2`. Fix: Modellpaket aus dem letzten Feld von `SHA256SUMS.txt` per `awk` lesen (unabhängig von `grep`-RegEx-Unterschieden). Kompletten aktuellen Repo-Checkout auf alte Markenbezeichnung in Inhalten und Pfaden geprüft: keine Treffer; frühere Commits behalten historische Texte.
 
 * **2026-11-27 (3)** – Repo-Namen auf `YI-Hack-v2` vereinheitlicht. Update-Fehler behoben: Paketname wird direkt aus dem Dateinamen-Feld in `SHA256SUMS.txt` gelesen.

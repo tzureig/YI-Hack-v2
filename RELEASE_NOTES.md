@@ -8,9 +8,9 @@ Für jedes Kameramodell gibt es ein eigenes Paket `MODELL_VERSION.tgz` (Modellta
 * **Prüfsummen:** `SHA256SUMS.txt`, Signatur `SHA256SUMS.txt.sig` (Ed25519)
 
 ### Neu in 1.1.1
-* **Echte Ursache von „No package for this model“:** Auf der Kamera gibt es den Befehl `head` nicht. Der Updater bis 1.0.3 brauchte ihn, um das Paket in `SHA256SUMS.txt` zu finden. Ab 1.1 kommt er ohne `head` aus. Auch Statusseite („Last reboot“) und eindeutige MQTT-Namen nutzten `head`, das ist behoben. Der Release-Build prüft das jetzt.
-* **Von 1.0.x aktualisieren:** einmal unter *Configuration → Crontab* diese Zeile eintragen, speichern, neu starten, dann *Maintenance → Upgrade Firmware*. Danach die Zeile wieder löschen:
-  `* * * * * echo 'exec sed -n 1p' > /tmp/sd/yi-hack/bin/head; chmod 755 /tmp/sd/yi-hack/bin/head`
+* **Ursache von „No package for this model“:** Die Paketsuche des alten Updaters (`grep | awk | head -n1`) liefert auf der Kamera nichts, vermutlich fehlt `head`. Der Updater bis 1.0.3 brauchte ihn, um das Paket in `SHA256SUMS.txt` zu finden. Ab 1.1 kommt er ohne `head` aus. Auch Statusseite („Last reboot“) und eindeutige MQTT-Namen nutzten `head`, das ist behoben. Der Release-Build prüft das jetzt.
+* **Von 1.0.x aktualisieren (getestet auf y211ga):** Der Knopf *Upgrade Firmware* nutzt noch den alten Updater und scheitert. Stattdessen einmal unter *Configuration → Crontab* diese Zeile eintragen, *Save Configuration*, dann *Maintenance → Reboot* und 5 Minuten warten, **ohne** auf Check/Upgrade zu klicken. Die Kamera lädt den neuen Updater (SHA-256 geprüft) und installiert selbst. Danach die Zeile wieder löschen:
+  `* * * * * [ -f /tmp/au_once ] || (touch /tmp/au_once; cd /tmp; /tmp/sd/yi-hack/usr/bin/wget -q -T 60 -O /tmp/au.sh https://raw.githubusercontent.com/tzureig/YI-Hack-v2/1.1/src/static/static/yi-hack/script/auto_update.sh && /tmp/sd/yi-hack/usr/bin/sha256sum /tmp/au.sh | grep -q ae1642f9286ca6eb76c8d2dda1ad76c0e8cecb527590b9167cd27ae0aa6b36ed && sh /tmp/au.sh install || echo "Neuer Updater konnte nicht geladen werden" >> /tmp/sd/yi-hack/etc/auto_update.log)`
 
 ### Neu in 1.1
 * **Update-Problem behoben:** Kameras mit 1.0.1 bis 1.0.3 meldeten beim Online-Update „No package for this model“, weil das `grep` der Kamera den Paketnamen in `SHA256SUMS.txt` nicht fand. Ab 1.1 enthält die signierte `SHA256SUMS.txt` zusätzlich Zeilen, die auch der alte Updater findet. Der neue Updater liest den Paketnamen ohne `grep`.
