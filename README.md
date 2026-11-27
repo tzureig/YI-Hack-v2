@@ -1,10 +1,10 @@
-# YI-Hack-Tiz
+# YI-Hack-v2
 
 Custom-Firmware für Yi-Kameras mit Allwinner-Chip (Yi Home 1080p, Yi Outdoor, Yi Dome, Yi Pro 2K, Kami, MIBAO, Blitzwolf …).
 Basiert auf [roleoroleo/yi-hack-Allwinner-v2](https://github.com/roleoroleo/yi-hack-Allwinner-v2) (aktueller Stand, wöchentlich abgeglichen) und ergänzt:
 
 * **Immer erreichbar:** Watchdog für Stream, Weboberfläche, SSH, ONVIF, mDNS, cron, WLAN und Netzwerk (Router-Ping → DHCP neu → Neustart mit Back-off), Ethernet-Erkennung, geplanter Neustart.
-* **Automatische Updates:** täglicher Check, Installation nachts, nur signierte Releases (Ed25519 + SHA-256), nie ein Downgrade, Beta-Kanal für eine Testkamera, Einstellungen bleiben erhalten. Updates kommen aus den [Releases dieses Repos](https://github.com/tzureig/YI-Hack-Tiz/releases).
+* **Automatische Updates:** täglicher Check, Installation nachts, nur signierte Releases (Ed25519 + SHA-256), nie ein Downgrade, Beta-Kanal für eine Testkamera, Einstellungen bleiben erhalten. Updates kommen aus den [Releases dieses Repos](https://github.com/tzureig/YI-Hack-v2/releases).
 * **Sicherheit:** SSH-Passwort nur als SHA-512-Hash, Weboberfläche mit SHA-512-Hash, Passwörter werden nie an den Browser geschickt oder in Logs gezeigt, Telnet/FTP standardmäßig aus, kein SSH-Login mit leerem Passwort.
 * **Snapshots, die nicht abstürzen:** Ein einziger Decoder, auch wenn Home Assistant, Frigate und UniFi gleichzeitig abfragen. Dazu ein kurzer Cache und ein Ersatzbild, falls etwas schiefgeht.
 * **Bild + Ton live:** Haupt- und Substream (H.264 + AAC) gleichzeitig per RTSP und ONVIF, ab Werk eingeschaltet.
@@ -14,7 +14,7 @@ Basiert auf [roleoroleo/yi-hack-Allwinner-v2](https://github.com/roleoroleo/yi-h
 
 ## Schnellstart
 
-1. Unter [Releases](https://github.com/tzureig/YI-Hack-Tiz/releases) das Paket für dein Modell laden (Tabelle: [docs/ANLEITUNG_DE.md](docs/ANLEITUNG_DE.md)).
+1. Unter [Releases](https://github.com/tzureig/YI-Hack-v2/releases) das Paket für dein Modell laden (Tabelle: [docs/ANLEITUNG_DE.md](docs/ANLEITUNG_DE.md)).
 2. SD-Karte FAT32 formatieren, Paket entpacken, Inhalt auf die Karte kopieren, Karte in die Kamera, Kamera neu starten.
 3. `http://IP-DER-KAMERA` öffnen → **Configuration → Authentication**: Benutzer + Passwort setzen.
 4. Fertig – Updates kommen ab jetzt automatisch nachts.

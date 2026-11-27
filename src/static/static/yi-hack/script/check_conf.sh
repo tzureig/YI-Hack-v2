@@ -84,7 +84,7 @@ REBOOT_SCHEDULE=no
 REBOOT_HOUR=4
 AUTO_UPDATE=yes
 AUTO_UPDATE_HOUR=3
-AUTO_UPDATE_REPO=tzureig/YI-Hack-Tiz
+AUTO_UPDATE_REPO=tzureig/YI-Hack-v2
 AUTO_UPDATE_CHANNEL=stable
 SNAPSHOT_CACHE=2"
 
@@ -180,7 +180,7 @@ do
     fi
 done
 
-# YI-Hack-Tiz: record to the SD card when a person is detected. Applied once
+# YI-Hack-v2: record to the SD card when a person is detected. Applied once
 # to existing installations (marker TIZ_REC_PERSON), later changes in the web
 # interface are kept.
 if ! grep -q "^TIZ_REC_PERSON=done" $SYSTEM_CONF_FILE; then

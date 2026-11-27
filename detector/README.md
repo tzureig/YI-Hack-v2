@@ -1,6 +1,6 @@
 # yi-detector – Personen & Tiere mit farbigen Rahmen
 
-Erkennt im Bild deiner YI-Hack-Tiz-Kameras **Personen (blauer Rahmen)** und **Hunde (grüner Rahmen)**, dazu Katzen (orange) und auf Wunsch weitere Tiere – **auch wenn sie sich nicht bewegen**.
+Erkennt im Bild deiner YI-Hack-v2-Kameras **Personen (blauer Rahmen)** und **Hunde (grüner Rahmen)**, dazu Katzen (orange) und auf Wunsch weitere Tiere – **auch wenn sie sich nicht bewegen**.
 
 ![Beispiel](example.jpg)
 
@@ -26,7 +26,7 @@ Leistung (YOLOv8n, 640 px): ca. 30–80 ms pro Bild auf einem aktuellen x86-Mini
 
 ### A) Home Assistant Add-on
 
-1. *Einstellungen → Add-ons → Add-on Store → ⋮ → Repositories* → `https://github.com/tzureig/YI-Hack-Tiz`
+1. *Einstellungen → Add-ons → Add-on Store → ⋮ → Repositories* → `https://github.com/tzureig/YI-Hack-v2`
 2. **YI Detector** installieren, unter *Konfiguration* die Kameras eintragen, starten.
 3. Mit dem Mosquitto-Add-on erscheinen die Sensoren automatisch. Die Weboberfläche öffnet sich über *Web-UI öffnen*.
 
@@ -34,8 +34,8 @@ Leistung (YOLOv8n, 640 px): ca. 30–80 ms pro Bild auf einem aktuellen x86-Mini
 
 ```sh
 mkdir yi-detector && cd yi-detector
-curl -O https://raw.githubusercontent.com/tzureig/YI-Hack-Tiz/main/detector/docker-compose.yml
-curl -o config.yaml https://raw.githubusercontent.com/tzureig/YI-Hack-Tiz/main/detector/config.example.yaml
+curl -O https://raw.githubusercontent.com/tzureig/YI-Hack-v2/main/detector/docker-compose.yml
+curl -o config.yaml https://raw.githubusercontent.com/tzureig/YI-Hack-v2/main/detector/config.example.yaml
 nano config.yaml          # Kameras, MQTT eintragen
 docker compose up -d
 ```

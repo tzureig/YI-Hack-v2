@@ -1,8 +1,8 @@
 name: YI Detector
 version: "1.0.1"
 slug: yi_detector
-description: Personen- und Tiererkennung für YI-Hack-Tiz-Kameras (Person blau, Hund grün) – auch ohne Bewegung
-url: https://github.com/tzureig/YI-Hack-Tiz/tree/main/detector
+description: Personen- und Tiererkennung für YI-Hack-v2-Kameras (Person blau, Hund grün) – auch ohne Bewegung
+url: https://github.com/tzureig/YI-Hack-v2/tree/main/detector
 arch:
   - amd64
   - aarch64

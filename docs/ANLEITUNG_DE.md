@@ -1,6 +1,6 @@
-# YI-Hack-Tiz – Anleitung
+# YI-Hack-v2 – Anleitung
 
-YI-Hack-Tiz basiert auf dem aktuellen Stand von yi-hack-Allwinner-v2 und bringt zusätzlich mehr Zuverlässigkeit, automatische Updates, bessere Sicherheit und fertige Anleitungen für Home Assistant, Frigate und UniFi Protect mit. Die Pakete gibt es unter [Releases](https://github.com/tzureig/YI-Hack-Tiz/releases).
+YI-Hack-v2 basiert auf dem aktuellen Stand von yi-hack-Allwinner-v2 und bringt zusätzlich mehr Zuverlässigkeit, automatische Updates, bessere Sicherheit und fertige Anleitungen für Home Assistant, Frigate und UniFi Protect mit. Die Pakete gibt es unter [Releases](https://github.com/tzureig/YI-Hack-v2/releases).
 
 ## 1. Das richtige Paket wählen
 
@@ -52,7 +52,7 @@ Variante A – am einfachsten, Einstellungen bleiben erhalten:
 
 Variante B: Karte entnehmen, Ordner `yi-hack` sichern, Paket wie bei der Erstinstallation aufspielen, Kamera starten, danach unter *Maintenance* → *Load Config* die Sicherung wieder einspielen.
 
-Variante C – automatisch: Ist YI-Hack-Tiz einmal installiert, sucht die Kamera **jeden Mittag** nach einer neuen Version und installiert sie **nachts** (ab Werk um 03:xx Uhr). Installiert werden nur signierte Releases (Ed25519-Signatur + SHA-256) und nur neuere Versionen, die Einstellungen bleiben erhalten. Mit *Update channel → Beta* bekommt eine Testkamera Pre-Releases zuerst. Einstellbar unter *Configuration → Firmware update*. Der Knopf „Upgrade Firmware“ unter *Maintenance* holt ebenfalls die neueste Version aus diesem Repository.
+Variante C – automatisch: Ist YI-Hack-v2 einmal installiert, sucht die Kamera **jeden Mittag** nach einer neuen Version und installiert sie **nachts** (ab Werk um 03:xx Uhr). Installiert werden nur signierte Releases (Ed25519-Signatur + SHA-256) und nur neuere Versionen, die Einstellungen bleiben erhalten. Mit *Update channel → Beta* bekommt eine Testkamera Pre-Releases zuerst. Einstellbar unter *Configuration → Firmware update*. Der Knopf „Upgrade Firmware“ unter *Maintenance* holt ebenfalls die neueste Version aus diesem Repository.
 
 ## 4. Was ist neu?
 

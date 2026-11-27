@@ -1,6 +1,6 @@
 # UniFi Protect
 
-UniFi Protect (ab Version 5.0) kann Fremdkameras über **ONVIF** einbinden. YI-Hack-Tiz bringt dafür einen ONVIF-Server mit Profile S, zwei Profilen (Haupt- und Substream), Snapshots, PTZ (bei schwenkbaren Modellen) und WS-Discovery mit.
+UniFi Protect (ab Version 5.0) kann Fremdkameras über **ONVIF** einbinden. YI-Hack-v2 bringt dafür einen ONVIF-Server mit Profile S, zwei Profilen (Haupt- und Substream), Snapshots, PTZ (bei schwenkbaren Modellen) und WS-Discovery mit.
 
 ## Kamera vorbereiten
 

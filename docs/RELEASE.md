@@ -1,6 +1,6 @@
 # Neue Version veröffentlichen
 
-Die Kameras laden Updates aus den **Releases** dieses Repositorys (`AUTO_UPDATE_REPO`, ab Werk `tzureig/YI-Hack-Tiz`).
+Die Kameras laden Updates aus den **Releases** dieses Repositorys (`AUTO_UPDATE_REPO`, ab Werk `tzureig/YI-Hack-v2`).
 
 > **Wichtig:** Die Kameras laden Releases ohne GitHub-Login. Das Repository muss deshalb **öffentlich** sein, sonst schlägt das Auto-Update fehl.
 
@@ -34,8 +34,8 @@ Der Workflow **Upstream sync** prüft jeden Montag, ob es im Original-Projekt (r
 ## Lokal bauen
 
 ```sh
-git clone --recursive https://github.com/tzureig/YI-Hack-Tiz
-cd YI-Hack-Tiz
+git clone --recursive https://github.com/tzureig/YI-Hack-v2
+cd YI-Hack-v2
 # Toolchain (einmalig)
 git clone --depth 1 --filter=blob:none --sparse https://github.com/lindenis-org/lindenis-v536-prebuilt
 git -C lindenis-v536-prebuilt sparse-checkout set gcc/linux-x86/arm/toolchain-sunxi-musl/toolchain

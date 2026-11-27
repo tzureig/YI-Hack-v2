@@ -7,7 +7,7 @@
 #                            the next boot completes the upgrade (used by the web interface)
 #   auto_update.sh install   prepare + reboot (used by cron at night)
 #
-# Releases come from AUTO_UPDATE_REPO (default tzureig/YI-Hack-Tiz).
+# Releases come from AUTO_UPDATE_REPO (default tzureig/YI-Hack-v2).
 # AUTO_UPDATE_CHANNEL=stable uses the latest release, beta also pre-releases
 # (for a test camera). Only a newer version is installed.
 #
@@ -111,7 +111,7 @@ SYSLOG=no
 
 REPO=$(get_config AUTO_UPDATE_REPO)
 case "$REPO" in
-    ''|*[!A-Za-z0-9._/-]*|*/*/*) REPO="tzureig/YI-Hack-Tiz" ;;
+    ''|*[!A-Za-z0-9._/-]*|*/*/*) REPO="tzureig/YI-Hack-v2" ;;
 esac
 CHANNEL=$(get_config AUTO_UPDATE_CHANNEL)
 [ "$CHANNEL" == "beta" ] || CHANNEL=stable

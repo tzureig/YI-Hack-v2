@@ -1,13 +1,13 @@
 ---
-title: YI-Hack-Tiz – Second Brain
+title: YI-Hack-v2 – Second Brain
 tags: [yi-hack, kamera, firmware, home-assistant, frigate, unifi, smarthome]
 status: aktiv
 erstellt: 2026-11-26
 aktualisiert: 2026-11-27
-repo: https://github.com/tzureig/YI-Hack-Tiz
+repo: https://github.com/tzureig/YI-Hack-v2
 ---
 
-# YI-Hack-Tiz – Second Brain
+# YI-Hack-v2 – Second Brain
 
 > Alles, was man über dieses Projekt wissen muss, an einem Ort: was es ist, wie es aufgebaut ist, welche Entscheidungen warum getroffen wurden, wo welche Datei liegt und wie man weitermacht.
 
@@ -15,7 +15,7 @@ repo: https://github.com/tzureig/YI-Hack-Tiz
 
 * **Ziel:** Yi-Kameras (Allwinner-Chip) mit einer eigenen Firmware von der SD-Karte betreiben: immer erreichbar, sicher, automatisch aktuell, kompatibel mit **Home Assistant**, **Frigate** und **UniFi Protect**; dazu **Personen-/Tiererkennung mit farbigen Rahmen** (Person blau, Hund grün, auch ohne Bewegung).
 * **Basis:** Fork von [roleoroleo/yi-hack-Allwinner-v2](https://github.com/roleoroleo/yi-hack-Allwinner-v2) inklusive der vollen Git-Historie, damit der wöchentliche Abgleich mit dem Original sauber zusammenführen kann.
-* **Repo:** `tzureig/YI-Hack-Tiz`, Branch `main`. Releases = Firmware-Pakete pro Modell.
+* **Repo:** `tzureig/YI-Hack-v2`, Branch `main`. Releases = Firmware-Pakete pro Modell.
 
 ## 2. Architektur auf einen Blick
 
@@ -85,7 +85,7 @@ repo: https://github.com/tzureig/YI-Hack-Tiz
 * **Original-Updates übernehmen:** Montags kommt automatisch ein PR „Upstream: …“ → Build grün → mergen → Release.
 * **Kamera hängt?** Logs: *Maintenance → Logs → Watchdog*. Letzter Neustart-Grund steht auf der Statusseite.
 
-## 6. Konfigurationsschlüssel (neu in YI-Hack-Tiz)
+## 6. Konfigurationsschlüssel (neu in YI-Hack-v2)
 
 | Schlüssel | Standard | Bedeutung |
 | --- | --- | --- |
@@ -98,7 +98,7 @@ repo: https://github.com/tzureig/YI-Hack-Tiz
 | `REBOOT_SCHEDULE` / `REBOOT_HOUR` | no / 4 | geplanter Neustart (daily/weekly) |
 | `AUTO_UPDATE` | yes | yes = nachts installieren, check = nur prüfen, no = aus |
 | `AUTO_UPDATE_HOUR` | 3 | Installationsstunde |
-| `AUTO_UPDATE_REPO` | tzureig/YI-Hack-Tiz | Quelle der Releases |
+| `AUTO_UPDATE_REPO` | tzureig/YI-Hack-v2 | Quelle der Releases |
 | `AUTO_UPDATE_CHANNEL` | stable | beta = auch Pre-Releases (Testkamera) |
 | `SNAPSHOT_CACHE` | 2 | Sekunden Snapshot-Cache |
 | `SSH_PASSWORD_HASH` | – | SHA-512-Hash (wird automatisch gesetzt) |
@@ -134,5 +134,5 @@ repo: https://github.com/tzureig/YI-Hack-Tiz
 ## 9. Verlauf
 
 * **2026-11-27 (2)** – Version 1.0.1 vorbereitet: signierte Updates (fwverify), Beta-Kanal, kein Downgrade, Web-Upgrade nutzt denselben geprüften Weg, Modellprüfung für SD-Pakete, Snapshot ohne eingefrorenes Bild, Build-Fix (zlib.net, `fetch.sh` mit Prüfsummen), Release prüft und signiert Pakete, Upstream-PR startet Build, Detector-Härtung.
-* **2026-11-27** – Komplett-Durchsicht: Web-UI im Browser getestet (fehlerfrei), Release 1.0.0 verifiziert. Korrigiert: „GitHub project“-Link auf der Statusseite zeigt jetzt auf YI-Hack-Tiz, README-Links absolut, überflüssiger `stale.yml`-Workflow entfernt (spart Actions-Minuten im privaten Repo). Hinweis: Wirksam auf der Kamera ab dem nächsten Release (z. B. 1.0.1).
-* **2026-11-26** – Projekt gestartet: Analyse von yi-hack-Allwinner-v2, Watchdog-Ausbau, Statusseite/Logs/Health, Fehlerbehebungen (Syslog-Feld, Ethernet-Static-IP, Watchdog-Ende bei RTSP-Stopp). Sicherheit (SHA-512), Auto-Update mit Prüfsumme, Snapshot-Cache, HA/Frigate/UniFi-Doku, GitHub-Workflows, Repo `tzureig/YI-Hack-Tiz` mit voller Historie, Release 1.0.0, yi-detector (Person blau, Hund grün).
+* **2026-11-27** – Komplett-Durchsicht: Web-UI im Browser getestet (fehlerfrei), Release 1.0.0 verifiziert. Korrigiert: „GitHub project“-Link auf der Statusseite zeigt jetzt auf YI-Hack-v2, README-Links absolut, überflüssiger `stale.yml`-Workflow entfernt (spart Actions-Minuten im privaten Repo). Hinweis: Wirksam auf der Kamera ab dem nächsten Release (z. B. 1.0.1).
+* **2026-11-26** – Projekt gestartet: Analyse von yi-hack-Allwinner-v2, Watchdog-Ausbau, Statusseite/Logs/Health, Fehlerbehebungen (Syslog-Feld, Ethernet-Static-IP, Watchdog-Ende bei RTSP-Stopp). Sicherheit (SHA-512), Auto-Update mit Prüfsumme, Snapshot-Cache, HA/Frigate/UniFi-Doku, GitHub-Workflows, Repo `tzureig/YI-Hack-v2` mit voller Historie, Release 1.0.0, yi-detector (Person blau, Hund grün).

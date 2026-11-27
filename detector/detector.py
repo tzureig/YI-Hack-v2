@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""yi-detector: person / animal detection for YI-Hack-Tiz cameras.
+"""yi-detector: person / animal detection for YI-Hack-v2 cameras.
 
 The camera itself is far too small for a neural network, so this service runs
 on a server (NAS, mini PC, Raspberry Pi 4/5, Home Assistant host):
@@ -335,7 +335,7 @@ class Mqtt:
 
     def _discovery(self, cam):
         device = {"identifiers": [f"yi_detector_{cam.id}"], "name": f"{cam.name} Erkennung",
-                  "manufacturer": "YI-Hack-Tiz", "model": "yi-detector"}
+                  "manufacturer": "YI-Hack-v2", "model": "yi-detector"}
         avail = {"availability_topic": f"{self.prefix}/status"}
         base = f"{self.prefix}/{cam.id}"
         for key, obj in cam.objects.items():

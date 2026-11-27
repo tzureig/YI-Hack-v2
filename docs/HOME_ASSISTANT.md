@@ -18,7 +18,7 @@ Für Bewegungsmelder braucht die Integration MQTT (siehe 2).
 2. Auf der Kamera: *MQTT*-Seite → Broker-IP, Port 1883, Benutzer/Passwort des Brokers.
 3. *Configuration → MQTT* einschalten, speichern, neu starten.
 
-Die Kamera meldet sich dann **automatisch** in Home Assistant an (MQTT Discovery ist in YI-Hack-Tiz ab Werk aktiv), mit Bewegung, Personen-/Fahrzeug-/Tiererkennung, Babyweinen, Geräuscherkennung und Telemetrie (WLAN, Speicher, Laufzeit).
+Die Kamera meldet sich dann **automatisch** in Home Assistant an (MQTT Discovery ist in YI-Hack-v2 ab Werk aktiv), mit Bewegung, Personen-/Fahrzeug-/Tiererkennung, Babyweinen, Geräuscherkennung und Telemetrie (WLAN, Speicher, Laufzeit).
 
 ## 3. Live-Bild mit Ton (WebRTC, sehr geringe Verzögerung)
 
