@@ -75,7 +75,8 @@ SVC_SSH=$(svc "dropbear")
 SVC_FTP=$(svc "pure-ftpd|tcpsvd")
 SVC_MQTT=$(svc "mqttv4")
 SVC_WD=$(svc "wd.sh")
-WD_LAST_REBOOT=$(cat /tmp/sd/yi-hack/etc/wd_last_reboot 2>/dev/null | head -n1 | tr -d '"\\')
+# no head on the camera
+WD_LAST_REBOOT=$(sed '1!d;s/["\\]//g' /tmp/sd/yi-hack/etc/wd_last_reboot 2>/dev/null)
 [ -z "$WD_LAST_REBOOT" ] && WD_LAST_REBOOT="none"
 if grep -q "^USERNAME=." /tmp/sd/yi-hack/etc/system.conf && grep -q "^PASSWORD=." /tmp/sd/yi-hack/etc/system.conf; then
     AUTH_SET="yes"

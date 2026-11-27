@@ -3,9 +3,14 @@
 Für jedes Kameramodell gibt es ein eigenes Paket `MODELL_VERSION.tgz` (Modelltabelle: [docs/ANLEITUNG_DE.md](https://github.com/tzureig/YI-Hack-v2/blob/main/docs/ANLEITUNG_DE.md)).
 
 * **Neuinstallation:** SD-Karte FAT32, Paket entpacken, Inhalt auf die Karte, Kamera neu starten.
-* **Von 1.0.1, 1.0.2 oder 1.0.3:** *Maintenance → Check* und dann *Upgrade Firmware*, oder einfach die nächste Nacht abwarten. Ab 1.1 findet auch die alte Firmware das Paket online.
+* **Von 1.0.1, 1.0.2 oder 1.0.3:** siehe „Neu in 1.1.1“ (eine Zeile unter *Crontab*), dann *Maintenance → Upgrade Firmware*.
 * **Von yi-hack 0.3.x oder 1.0.0:** Paket als `MODELL_x.x.x.tgz` ins Hauptverzeichnis der SD legen (z. B. `y211ga_x.x.x.tgz`), dann *Maintenance → Upgrade Firmware*.
 * **Prüfsummen:** `SHA256SUMS.txt`, Signatur `SHA256SUMS.txt.sig` (Ed25519)
+
+### Neu in 1.1.1
+* **Echte Ursache von „No package for this model“:** Auf der Kamera gibt es den Befehl `head` nicht. Der Updater bis 1.0.3 brauchte ihn, um das Paket in `SHA256SUMS.txt` zu finden. Ab 1.1 kommt er ohne `head` aus. Auch Statusseite („Last reboot“) und eindeutige MQTT-Namen nutzten `head`, das ist behoben. Der Release-Build prüft das jetzt.
+* **Von 1.0.x aktualisieren:** einmal unter *Configuration → Crontab* diese Zeile eintragen, speichern, neu starten, dann *Maintenance → Upgrade Firmware*. Danach die Zeile wieder löschen:
+  `* * * * * echo 'exec sed -n 1p' > /tmp/sd/yi-hack/bin/head; chmod 755 /tmp/sd/yi-hack/bin/head`
 
 ### Neu in 1.1
 * **Update-Problem behoben:** Kameras mit 1.0.1 bis 1.0.3 meldeten beim Online-Update „No package for this model“, weil das `grep` der Kamera den Paketnamen in `SHA256SUMS.txt` nicht fand. Ab 1.1 enthält die signierte `SHA256SUMS.txt` zusätzlich Zeilen, die auch der alte Updater findet. Der neue Updater liest den Paketnamen ohne `grep`.

@@ -54,6 +54,13 @@ jobs:
           git -C lindenis-v536-prebuilt sparse-checkout set gcc/linux-x86/arm/toolchain-sunxi-musl/toolchain
           sudo mkdir -p ${SUNXI_TOOLCHAIN}
           sudo cp -r lindenis-v536-prebuilt/gcc/linux-x86/arm/toolchain-sunxi-musl/toolchain ${SUNXI_TOOLCHAIN}/
+      - name: Camera shell tools
+        run: |
+          # The camera has no head command (1.0.1-1.0.3 could not
+          # find update packages because of "| head -n1")
+          if grep -rnE '(^|[|;&(]|\$\() *head( |$)' src/static/static/yi-hack/script src/www/httpd/cgi-bin; then
+            echo "::error::head is not available on the camera"; exit 1
+          fi
       - name: Build
         run: bash -ex scripts/compile.sh
       - name: Pack

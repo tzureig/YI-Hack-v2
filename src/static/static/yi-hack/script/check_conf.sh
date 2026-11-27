@@ -205,8 +205,8 @@ fi
 # MQTT names are changed only while MQTT is not in use.
 if ! grep -q "^YIV2_V102=done" $SYSTEM_CONF_FILE; then
     sed -i "s/^RTSP_STREAM=.*/RTSP_STREAM=both/; s/^ONVIF_PROFILE=.*/ONVIF_PROFILE=both/" $SYSTEM_CONF_FILE
-    # last 6 hex digits of the MAC (busybox here has no tr)
-    MAC6=$(cat /sys/class/net/wlan0/address /sys/class/net/eth0/address 2>/dev/null | head -n1 | sed 's/[^0-9a-fA-F]//g' | awk '{print tolower(substr($0, length($0) - 5))}')
+    # last 6 hex digits of the MAC (no head on the camera)
+    MAC6=$(cat /sys/class/net/wlan0/address /sys/class/net/eth0/address 2>/dev/null | sed '1!d;s/[^0-9a-fA-F]//g' | awk '{print tolower(substr($0, length($0) - 5))}')
     if [ -n "$MAC6" ] && ! grep -q "^MQTT=yes" $SYSTEM_CONF_FILE; then
         sed -i "s/^MQTT_CLIENT_ID=yi-cam$/MQTT_CLIENT_ID=yi-cam-$MAC6/; s/^MQTT_PREFIX=yicam$/MQTT_PREFIX=yicam\/$MAC6/" $MQTTV4_CONF_FILE
         if [ -f /tmp/sd/yi-hack/etc/mqtt_advertise.conf ]; then
