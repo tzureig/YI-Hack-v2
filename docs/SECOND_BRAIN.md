@@ -44,7 +44,9 @@ repo: https://github.com/tzureig/YI-Hack-Tiz
 | Boot-Ablauf | `src/static/static/yi-hack/script/system.sh` | `/tmp/sd/yi-hack/script/system.sh` |
 | Dienste starten/stoppen | `src/static/static/yi-hack/script/service.sh` | `… service.sh rtsp|onvif|httpd|sshd|wd start` |
 | Watchdog | `src/static/static/yi-hack/script/wd.sh` | Log: `/tmp/wd.log` (RAM) |
-| Auto-Update | `src/static/static/yi-hack/script/auto_update.sh` | Status `etc/auto_update.status`, Log `etc/auto_update.log` |
+| Auto-Update | `src/static/static/yi-hack/script/auto_update.sh` (check/prepare/install) | Status `etc/auto_update.status`, Log `etc/auto_update.log` |
+| Signaturprüfung | `src/fwverify/` (TweetNaCl, Schlüssel `fw_sign.pub`) | `/tmp/sd/yi-hack/bin/fwverify` |
+| Sichere Downloads beim Bau | `scripts/fetch.sh` | – |
 | Standardwerte / Migration | `src/static/static/yi-hack/etc/system.conf`, `script/check_conf.sh` | `etc/system.conf` |
 | Web-Oberfläche | `src/www/httpd/htdocs/` (HTML/JS), `src/www/httpd/cgi-bin/` | `/tmp/sd/yi-hack/www/` |
 | Webserver-Passwort-Hash | `src/busybox/auth_hash.patch`, `.config` (`FEATURE_HTTPD_AUTH_MD5`) | `/tmp/httpd.conf` |
@@ -64,7 +66,8 @@ repo: https://github.com/tzureig/YI-Hack-Tiz
 | SSH-Passwort **nur als SHA-512-Hash** | Wird nur zur Prüfung gebraucht. |
 | Kamera-Login (RTSP/ONVIF) bleibt **im Klartext auf der SD** | RTSP-Digest und ONVIF-WS-Security brauchen das Passwort selbst. Ohne würden HA, Frigate und UniFi nicht funktionieren. Ausgleich: wird nie an den Browser geschickt, nie geloggt, der Webserver bekommt nur einen Hash. |
 | `********` als Platzhalter in der Weboberfläche | Passwörter verlassen die Kamera nicht. Wer das Feld unverändert lässt, behält den gespeicherten Wert. |
-| Updates nur mit **SHA-256 aus dem Release** + Modellprüfung | Kaputte Downloads oder falsche Pakete dürfen nie installiert werden. |
+| Updates nur mit **Ed25519-signierter** `SHA256SUMS.txt` + SHA-256 + Modellprüfung, nie Downgrade | BusyBox-`wget` prüft keine TLS-Zertifikate: Nur die Signatur schützt gegen manipulierte Downloads. Privater Schlüssel nur im Secret `FW_SIGN_KEY`. |
+| Beta-Kanal über GitHub-Pre-Releases | Neue Versionen erst auf einer Testkamera, `releases/latest` überspringt Pre-Releases. |
 | Updates **nachts**, Check **mittags**, Minute aus der MAC-Adresse | Kein Ausfall tagsüber; mehrere Kameras fragen GitHub nicht gleichzeitig an. |
 | Snapshot: **ein** Decoder, Cache 2 s, Ersatzbild | Mehrere gleichzeitige Decoder füllten den RAM → Neustarts. |
 | Haupt- + Substream ab Werk an | Frigate (Erkennung auf Sub), UniFi (Vorschau), HA (Kacheln) brauchen beide. |
@@ -96,6 +99,7 @@ repo: https://github.com/tzureig/YI-Hack-Tiz
 | `AUTO_UPDATE` | yes | yes = nachts installieren, check = nur prüfen, no = aus |
 | `AUTO_UPDATE_HOUR` | 3 | Installationsstunde |
 | `AUTO_UPDATE_REPO` | tzureig/YI-Hack-Tiz | Quelle der Releases |
+| `AUTO_UPDATE_CHANNEL` | stable | beta = auch Pre-Releases (Testkamera) |
 | `SNAPSHOT_CACHE` | 2 | Sekunden Snapshot-Cache |
 | `SSH_PASSWORD_HASH` | – | SHA-512-Hash (wird automatisch gesetzt) |
 | geändert: `TELNETD`, `FTPD` | no | ab Werk aus |
@@ -124,9 +128,11 @@ repo: https://github.com/tzureig/YI-Hack-Tiz
 * [ ] GHCR-Paket `yi-detector` in GitHub auf **public** stellen (für das HA-Add-on nötig).
 * [ ] Optional: Zonen/Masken im yi-detector (nur Garten, nicht Straße).
 * [ ] Optional: Rollback-Paket für Updates auf der SD aufbewahren.
+* [ ] GitHub-Secret `FW_SIGN_KEY` setzen (privater Schlüssel), sonst bricht der Release-Workflow ab.
 * [ ] Optional: Gesichter / Paketerkennung (anderes Modell).
 
 ## 9. Verlauf
 
+* **2026-11-27 (2)** – Version 1.0.1 vorbereitet: signierte Updates (fwverify), Beta-Kanal, kein Downgrade, Web-Upgrade nutzt denselben geprüften Weg, Modellprüfung für SD-Pakete, Snapshot ohne eingefrorenes Bild, Build-Fix (zlib.net, `fetch.sh` mit Prüfsummen), Release prüft und signiert Pakete, Upstream-PR startet Build, Detector-Härtung.
 * **2026-11-27** – Komplett-Durchsicht: Web-UI im Browser getestet (fehlerfrei), Release 1.0.0 verifiziert. Korrigiert: „GitHub project“-Link auf der Statusseite zeigt jetzt auf YI-Hack-Tiz, README-Links absolut, überflüssiger `stale.yml`-Workflow entfernt (spart Actions-Minuten im privaten Repo). Hinweis: Wirksam auf der Kamera ab dem nächsten Release (z. B. 1.0.1).
 * **2026-11-26** – Projekt gestartet: Analyse von yi-hack-Allwinner-v2, Watchdog-Ausbau, Statusseite/Logs/Health, Fehlerbehebungen (Syslog-Feld, Ethernet-Static-IP, Watchdog-Ende bei RTSP-Stopp). Sicherheit (SHA-512), Auto-Update mit Prüfsumme, Snapshot-Cache, HA/Frigate/UniFi-Doku, GitHub-Workflows, Repo `tzureig/YI-Hack-Tiz` mit voller Historie, Release 1.0.0, yi-detector (Person blau, Hund grün).
