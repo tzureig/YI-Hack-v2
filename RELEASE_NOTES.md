@@ -10,6 +10,7 @@ Für jedes Kameramodell gibt es ein eigenes Paket `MODELL_VERSION.tgz` (Modellta
 ### Neu in 1.0.1
 * Updates nur noch mit Ed25519-Signatur (eigener kleiner Prüfer `fwverify`), nie ein Downgrade, Beta-Kanal für eine Testkamera.
 * „Upgrade Firmware“ in der Weboberfläche nutzt dieselbe geprüfte Logik; ein von Hand auf die SD gelegtes Paket wird auf das Modell geprüft.
+* **Aufnahme bei Personen:** ab Werk (und einmalig beim Update) nimmt die Kamera auf die SD auf, sobald sie eine Person erkennt (KI-Personenerkennung, Aufnahme ohne Cloud). Bei weniger als 10 % freiem Platz werden die ältesten Aufnahmen gelöscht. Änderbar unter *Camera settings*.
 * Snapshot: kein eingefrorenes Bild mehr, wenn der Decoder ausfällt (nach 30 s Ersatzbild).
 * Build: Quellarchive werden mit Prüfsumme und Ersatz-Download geladen (zlib.net-Fehler behoben).
 * Release prüft jedes Paket (Version, Modell, Upgrade-Marker, fwverify).
