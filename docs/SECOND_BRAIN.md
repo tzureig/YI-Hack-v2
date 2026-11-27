@@ -83,6 +83,7 @@ repo: https://github.com/tzureig/YI-Hack-v2
 * **Erkennung:** `http://SERVER:8090/` (alle Kameras mit Rahmen).
 * **Neues Release:** GitHub → *Actions → Release → Run workflow* → Version (z. B. `1.0.1`). Kameras installieren es in der folgenden Nacht.
 * **Original-Updates übernehmen:** Montags kommt automatisch ein PR „Upstream: …“ → Build grün → mergen → Release.
+* **Update von 1.0.2 bei „No package for this model“:** Release 1.0.3 enthält den Parser-Fix. Falls die alte Firmware das Paket online nicht findet, das Modellpaket aus [Release 1.0.3](https://github.com/tzureig/YI-Hack-v2/releases/tag/1.0.3) laden (z. B. `y211ga_1.0.3.tgz`), in `y211ga_x.x.x.tgz` umbenennen, ins Hauptverzeichnis der SD-Karte legen und unter *Maintenance → Upgrade Firmware* als lokales SD-Update installieren. Die Einstellungen bleiben erhalten.
 * **Kamera hängt?** Logs: *Maintenance → Logs → Watchdog*. Letzter Neustart-Grund steht auf der Statusseite.
 
 ## 6. Konfigurationsschlüssel (neu in YI-Hack-v2)
@@ -132,6 +133,8 @@ repo: https://github.com/tzureig/YI-Hack-v2
 * [ ] Optional: Gesichter / Paketerkennung (anderes Modell).
 
 ## 9. Verlauf
+
+* **2026-11-27 (4)** – Release 1.0.3 stabil veröffentlicht; Build, Paketprüfungen und Ed25519-Signatur erfolgreich. `y211ga_1.0.3.tgz` vorhanden; entpacktes Paket bestätigt Parser-Fix und `AUTO_UPDATE_REPO=tzureig/YI-Hack-v2`. Fix: Modellpaket aus dem letzten Feld von `SHA256SUMS.txt` per `awk` lesen (unabhängig von `grep`-RegEx-Unterschieden). Kompletten aktuellen Repo-Checkout auf alte Markenbezeichnung in Inhalten und Pfaden geprüft: keine Treffer; frühere Commits behalten historische Texte.
 
 * **2026-11-27 (3)** – Repo-Namen auf `YI-Hack-v2` vereinheitlicht. Update-Fehler behoben: Paketname wird direkt aus dem Dateinamen-Feld in `SHA256SUMS.txt` gelesen.
 
